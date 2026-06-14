@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using NovaTech.TerraTech.Platform.AnalyticsManagement.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
 using NovaTech.TerraTech.Platform.Iam.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
 using NovaTech.TerraTech.Platform.Monitoring.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
 using NovaTech.TerraTech.Platform.NotificationManagement.Infrastructure.Persistence.EFC.Configuration.Extensions;
@@ -41,6 +42,9 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
         
         // Profiles Context
         builder.ApplyProfileManagementConfiguration();
+        
+        //Analytics Context
+        builder.ApplyAnalyticsManagementConfiguration();
         
         // Stock Management Context
         builder.ApplyStockConfiguration();

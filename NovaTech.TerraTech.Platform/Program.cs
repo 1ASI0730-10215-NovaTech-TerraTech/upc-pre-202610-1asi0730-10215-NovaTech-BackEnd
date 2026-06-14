@@ -15,6 +15,11 @@ using Cortex.Mediator.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using Microsoft.OpenApi;
+using NovaTech.TerraTech.Platform.AnalyticsManagement.Application.Internal.CommandServices;
+using NovaTech.TerraTech.Platform.AnalyticsManagement.Application.Internal.QueryServices;
+using NovaTech.TerraTech.Platform.AnalyticsManagement.Application.Services;
+using NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Repositories;
+using NovaTech.TerraTech.Platform.AnalyticsManagement.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 using NovaTech.TerraTech.Platform.Monitoring.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
@@ -158,6 +163,10 @@ builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<IProfileCommandService, ProfileCommandService>();
 builder.Services.AddScoped<IProfileQueryService, ProfileQueryService>();
 
+// AnalyticsManagement Context
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
+builder.Services.AddScoped<IReportCommandService, ReportCommandService>();
+builder.Services.AddScoped<IReportQueryService, ReportQueryService>();
 
 // Stock Management Context
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();

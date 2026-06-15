@@ -8,6 +8,7 @@ using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFramew
 using NovaTech.TerraTech.Platform.StockManagement.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
 using NovaTech.TerraTech.Platform.CommercialManagement.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
 using NovaTech.TerraTech.Platform.ProfileManagement.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
+using NovaTech.TerraTech.Platform.CommunityManagement.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
 
 namespace NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 
@@ -42,6 +43,9 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
         
         // Profiles Context
         builder.ApplyProfileManagementConfiguration();
+        
+        // Community Management Context
+        builder.ConfigureCommunityManagementContext();
         
         //Analytics Context
         builder.ApplyAnalyticsManagementConfiguration();

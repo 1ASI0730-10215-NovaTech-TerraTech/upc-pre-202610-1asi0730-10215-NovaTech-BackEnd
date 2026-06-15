@@ -57,7 +57,6 @@ using NovaTech.TerraTech.Platform.ProfileManagement.Infrastructure.Persistence.E
 
 // Using Bounded CommunityManagement
 using NovaTech.TerraTech.Platform.CommunityManagement.Application.Services;
-using NovaTech.TerraTech.Platform.CommunityManagement.Application.QueryServices;
 using NovaTech.TerraTech.Platform.CommunityManagement.Domain.Repositories;
 using NovaTech.TerraTech.Platform.CommunityManagement.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 

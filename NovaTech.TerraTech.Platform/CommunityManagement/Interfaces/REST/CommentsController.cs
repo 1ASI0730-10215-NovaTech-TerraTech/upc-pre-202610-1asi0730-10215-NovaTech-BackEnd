@@ -1,0 +1,104 @@
+using Microsoft.AspNetCore.Mvc;
+using NovaTech.TerraTech.Platform.CommunityManagement.Application.Errors;
+using NovaTech.TerraTech.Platform.CommunityManagement.Application.Services;
+using NovaTech.TerraTech.Platform.CommunityManagement.Domain.Model.Commands;
+using NovaTech.TerraTech.Platform.CommunityManagement.Domain.Model.Queries;
+using NovaTech.TerraTech.Platform.CommunityManagement.Interfaces.REST.Resources;
+using NovaTech.TerraTech.Platform.CommunityManagement.Interfaces.REST.Transform;
+using Swashbuckle.AspNetCore.Annotations;
+
+namespace NovaTech.TerraTech.Platform.CommunityManagement.Interfaces.REST;
+
+[ApiController]
+[Route("api/v1/comments")]
+[Produces("application/json")]
+[Tags("Community")] 
+public class CommentsController(
+    ICommentService commentService,
+    ILogger<CommentsController> logger) : ControllerBase
+{
+    [HttpPost]
+    [SwaggerOperation(Summary = "Creates a new comment", Description = "Creates a comment for a profile")]
+    [SwaggerResponse(201, "Comment created", typeof(CommentResource))]
+    [SwaggerResponse(400, "Invalid request", typeof(string))]
+    [SwaggerResponse(500, "Unexpected error", typeof(ProblemDetails))]
+    public async Task<IActionResult> CreateComment([FromBody] CreateCommentResource resource, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var command = CreateCommentCommandFromResourceAssembler.ToCommandFromResource(resource);
+            var result = await commentService.Handle(command, cancellationToken);
+            
+            if (result.IsSuccess)
+            {
+                return CreatedAtAction(nameof(GetCommentById), new { id = result.Value.Id }, 
+                    CommentResourceFromEntityAssembler.ToResourceFromEntity(result.Value));
+            }
+            
+            return (CommunityError)result.Error switch
+            {
+                CommunityError.InvalidComment => BadRequest("Invalid comment request data"),
+                _ => Problem(title: "Unexpected server error", detail: "An unexpected error occurred", statusCode: 500)
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error creating comment");
+            return Problem(title: "Unexpected server error", detail: "An unexpected error occurred", statusCode: 500);
+        }
+    }
+
+    [HttpGet("target/{targetProfileId}")]
+    [SwaggerOperation(Summary = "Gets comments by target profile")]
+    [SwaggerResponse(200, "Comments retrieved", typeof(IEnumerable<CommentResource>))]
+    public async Task<IActionResult> GetCommentsByTargetProfileId(string targetProfileId, CancellationToken cancellationToken)
+    {
+        var query = new GetCommentsByTargetProfileIdQuery(targetProfileId);
+        var comments = await commentService.Handle(query, cancellationToken);
+        var resources = comments.Select(CommentResourceFromEntityAssembler.ToResourceFromEntity);
+        return Ok(resources);
+    }
+
+    [HttpGet("{id}")]
+    [SwaggerOperation(Summary = "Gets a comment by id")]
+    [SwaggerResponse(200, "Comment found", typeof(CommentResource))]
+    [SwaggerResponse(404, "Comment not found")]
+    public async Task<IActionResult> GetCommentById(int id, CancellationToken cancellationToken)
+    {
+        var query = new GetCommentByIdQuery(id);
+        var comment = await commentService.Handle(query, cancellationToken);
+        
+        if (comment == null)
+            return NotFound();
+        
+        var resource = CommentResourceFromEntityAssembler.ToResourceFromEntity(comment);
+        return Ok(resource);
+    }
+    
+    [HttpPut("{id}")]
+    [SwaggerOperation(Summary = "Updates a comment", Description = "Updates the content and rating of an existing comment")]
+    [SwaggerResponse(200, "Comment updated", typeof(CommentResource))]
+    [SwaggerResponse(404, "Comment not found", typeof(string))]
+    [SwaggerResponse(500, "Unexpected error", typeof(ProblemDetails))]
+    public async Task<IActionResult> UpdateComment(int id, [FromBody] UpdateCommentResource resource, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var command = new UpdateCommentCommand(id, resource.Content, resource.Rating);
+            var result = await commentService.Handle(command, cancellationToken);
+            
+            if (result.IsSuccess)
+            {
+                return Ok(CommentResourceFromEntityAssembler.ToResourceFromEntity(result.Value));
+            }
+            
+            return (CommunityError)result.Error == CommunityError.NotFound ? NotFound("Comment not found") : 
+                Problem(title: "Unexpected server error", statusCode: 500);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error updating comment {Id}", id);
+            return Problem(title: "Unexpected server error", statusCode: 500);
+        }
+    }
+}

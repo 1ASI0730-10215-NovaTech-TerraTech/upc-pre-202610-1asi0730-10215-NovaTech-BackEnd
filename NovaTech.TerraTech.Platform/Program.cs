@@ -54,6 +54,14 @@ using NovaTech.TerraTech.Platform.ProfileManagement.Application.QueryServices;
 using NovaTech.TerraTech.Platform.ProfileManagement.Domain.Repositories;
 using NovaTech.TerraTech.Platform.ProfileManagement.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 
+
+// Using Bounded CommunityManagement
+using NovaTech.TerraTech.Platform.CommunityManagement.Application.Services;
+using NovaTech.TerraTech.Platform.CommunityManagement.Application.QueryServices;
+using NovaTech.TerraTech.Platform.CommunityManagement.Domain.Repositories;
+using NovaTech.TerraTech.Platform.CommunityManagement.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -162,6 +170,12 @@ builder.Services.AddScoped<IFieldQueryService, FieldQueryService>();
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<IProfileCommandService, ProfileCommandService>();
 builder.Services.AddScoped<IProfileQueryService, ProfileQueryService>();
+
+//Community Management Context
+builder.Services.AddScoped<ICommunityProfileRepository, CommunityProfileRepository>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<ICommunityProfileService, CommunityProfileService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 
 // AnalyticsManagement Context
 builder.Services.AddScoped<IReportRepository, ReportRepository>();

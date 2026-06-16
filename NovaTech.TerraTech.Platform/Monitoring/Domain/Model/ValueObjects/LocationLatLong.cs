@@ -2,7 +2,6 @@
 
 public sealed record LocationLatLong
 {
-    
     public LocationLatLong(double latitude, double longitude)
     {
         if (latitude < -90 || latitude > 90)
@@ -16,7 +15,6 @@ public sealed record LocationLatLong
     }
     
     public double Latitude { get; }
-
     
     public double Longitude { get; }
 

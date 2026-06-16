@@ -1,6 +1,5 @@
 ﻿namespace NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects;
 
-
 public sealed record SoilType
 {
     private const int MaxLength = 50;
@@ -15,8 +14,7 @@ public sealed record SoilType
 
         Value = value;
     }
-
-   
+    
     public string Value { get; }
     
     public override string ToString() => Value;

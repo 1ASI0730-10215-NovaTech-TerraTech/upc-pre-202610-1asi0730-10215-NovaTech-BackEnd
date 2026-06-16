@@ -1,6 +1,7 @@
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using NovaTech.TerraTech.Platform.Monitoring.Application.Errors;
 using NovaTech.TerraTech.Platform.Monitoring.Application.Services;
 using NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST.Resources;
 using NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST.Transform;
@@ -20,55 +21,76 @@ public class FieldsController(
     ILogger<FieldsController> logger)
     : ControllerBase
 {
-    
     [HttpPost]
-    [SwaggerOperation(
-        Summary = "Creates a Field",
-        Description = "Creates a Field with a given Soil Type and Location",
-        OperationId = "CreateField")]
+    [SwaggerOperation(Summary = "Creates a Field", OperationId = "CreateField")]
     [SwaggerResponse(201, "The Field was created", typeof(FieldResource))]
     [SwaggerResponse(400, "The request payload is invalid", typeof(string))]
     [SwaggerResponse(409, "The Field already exists", typeof(string))]
     [SwaggerResponse(500, "Unexpected server error", typeof(ProblemDetails))]
-    public async Task<ActionResult> CreateField([FromBody] CreateFieldResource resource,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult> CreateField([FromBody] CreateFieldResource resource, CancellationToken cancellationToken)
     {
         try
         {
-            var createFieldCommand =
-                CreateFieldCommandFromResourceAssembler.ToCommandFromResource(resource);
-            var result = await fieldCommandService.Handle(createFieldCommand, cancellationToken);
+            var command = CreateFieldCommandFromResourceAssembler.ToCommandFromResource(resource);
+            var result = await fieldCommandService.Handle(command, cancellationToken);
             return ActionResultFromCreateFieldResultAssembler.ToActionResultFromCreateFieldResult(
-                result,
-                this,
-                localizer,
-                nameof(GetFieldById));
+                result, this, localizer, nameof(GetFieldById));
         }
         catch (ArgumentException ex)
         {
-            logger.LogWarning(ex,
-                "Validation failed while creating Field for SoilType {SoilType}",
-                resource.SoilType);
+            logger.LogWarning(ex, "Validation failed while creating Field for SoilType {SoilType}", resource.SoilType);
             return BadRequest(localizer["InvalidFieldRequest"].Value);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex,
-                "Unexpected error while creating field for SoilType {SoilType}",
-                resource.SoilType);
+            logger.LogError(ex, "Unexpected error while creating field for SoilType {SoilType}", resource.SoilType);
+            return Problem(title: localizer["UnexpectedServerError"].Value, detail: localizer["UnexpectedErrorCreatingField"].Value, statusCode: 500);
+        }
+    }
 
-            return Problem(
-                title: localizer["UnexpectedServerError"].Value,
-                detail: localizer["UnexpectedErrorCreatingField"].Value,
-                statusCode: 500);
+    [HttpPut("{id:int}")]
+    [SwaggerOperation(Summary = "Updates an existing field", OperationId = "UpdateField")]
+    [SwaggerResponse(200, "The field was updated", typeof(FieldResource))]
+    [SwaggerResponse(400, "Invalid request data", typeof(string))]
+    [SwaggerResponse(404, "Field not found", typeof(string))]
+    [SwaggerResponse(500, "Unexpected server error", typeof(ProblemDetails))]
+    public async Task<ActionResult> UpdateField(
+        [FromRoute] int id,
+        [FromBody] UpdateFieldResource resource,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var command = UpdateFieldCommandFromResourceAssembler.ToCommandFromResource(id, resource);
+            var result = await fieldCommandService.Handle(command, cancellationToken);
+            
+            if (result.IsFailure)
+            {
+                return result.Error switch
+                {
+                    CreateFieldError.FieldNotFound => NotFound(new { error = localizer["FieldNotFound"].Value }),
+                    CreateFieldError.InvalidData => BadRequest(new { error = result.Message }),
+                    _ => Problem(title: localizer["UnexpectedServerError"].Value, detail: result.Message, statusCode: 500)
+                };
+            }
+            
+            var resourceResponse = FieldResourceFromEntityAssembler.ToResourceFromEntity(result.Value);
+            return Ok(resourceResponse);
+        }
+        catch (ArgumentException ex)
+        {
+            logger.LogWarning(ex, "Validation failed while updating field {FieldId}", id);
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error while updating field {FieldId}", id);
+            return Problem(title: localizer["UnexpectedServerError"].Value, detail: localizer["UnexpectedErrorUpdatingField"].Value, statusCode: 500);
         }
     }
 
     [HttpGet]
-    [SwaggerOperation(
-        Summary = "Gets all fields",
-        Description = "Retrieves all available fields",
-        OperationId = "GetAllFields")]
+    [SwaggerOperation(Summary = "Gets all fields", OperationId = "GetAllFields")]
     [SwaggerResponse(200, "List of all fields", typeof(IEnumerable<FieldResource>))]
     public async Task<ActionResult<IEnumerable<FieldResource>>> GetAllFields(CancellationToken cancellationToken)
     {
@@ -81,21 +103,15 @@ public class FieldsController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Unexpected error while retrieving all fields");
-            return Problem(
-                title: localizer["UnexpectedServerError"].Value,
-                detail: localizer["UnexpectedErrorProcessingRequest"].Value,
-                statusCode: 500);
+            return Problem(title: localizer["UnexpectedServerError"].Value, detail: localizer["UnexpectedErrorProcessingRequest"].Value, statusCode: 500);
         }
     }
 
-    [HttpGet("{id}")]
-    [SwaggerOperation(
-        Summary = "Gets a field by id",
-        Description = "Retrieves a specific field by its identifier",
-        OperationId = "GetFieldById")]
+    [HttpGet("{id:int}")]
+    [SwaggerOperation(Summary = "Gets a field by id", OperationId = "GetFieldById")]
     [SwaggerResponse(200, "The field was found", typeof(FieldResource))]
     [SwaggerResponse(404, "The field was not found")]
-    public async Task<ActionResult> GetFieldById(int id, CancellationToken cancellationToken = default)
+    public async Task<ActionResult> GetFieldById(int id, CancellationToken cancellationToken)
     {
         try
         {
@@ -107,11 +123,7 @@ public class FieldsController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Unexpected error while retrieving field with id {FieldId}", id);
-            return Problem(
-                title: localizer["UnexpectedServerError"].Value,
-                detail: localizer["UnexpectedErrorProcessingRequest"].Value,
-                statusCode: 500);
+            return Problem(title: localizer["UnexpectedServerError"].Value, detail: localizer["UnexpectedErrorProcessingRequest"].Value, statusCode: 500);
         }
     }
-    
 }

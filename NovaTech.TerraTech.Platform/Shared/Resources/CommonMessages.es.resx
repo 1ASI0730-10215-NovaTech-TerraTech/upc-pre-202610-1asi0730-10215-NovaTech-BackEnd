@@ -17,4 +17,19 @@
     <data name="UnexpectedErrorUpdatingField" xml:space="preserve">
         <value>Ocurrió un error inesperado al actualizar el campo.</value>
     </data>
+    <data name="DeviceAlreadyExists" xml:space="preserve">
+        <value>Ya existe un dispositivo con esta dirección MAC.</value>
+    </data>
+    <data name="UnexpectedErrorCreatingDevice" xml:space="preserve">
+        <value>Ocurrió un error inesperado al crear el dispositivo.+</value>
+    </data>
+    <data name="UnexpectedErrorUpdatingDevice" xml:space="preserve">
+        <value>Ocurrió un error inesperado al actualizar el dispositivo.</value>
+    </data>
+    <data name="Cancel" xml:space="preserve">
+        <value>Cancelar</value>
+    </data>
+    <data name="InternalServerError" xml:space="preserve">
+        <value>Error Interno del Servidor</value>
+    </data>
 </root>

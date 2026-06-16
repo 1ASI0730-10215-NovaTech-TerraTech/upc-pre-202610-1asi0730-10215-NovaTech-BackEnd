@@ -15,4 +15,13 @@
   <data name="UnexpectedErrorUpdatingField" xml:space="preserve">
     <value>An unexpected error occurred while updating the field.</value>
   </data>
+  <data name="DeviceAlreadyExists" xml:space="preserve">
+    <value>A device with this MAC address already exists.</value>
+  </data>
+  <data name="UnexpectedErrorCreatingDevice" xml:space="preserve">
+    <value>An unexpected error occurred while creating the device.</value>
+  </data>
+  <data name="UnexpectedErrorUpdatingDevice" xml:space="preserve">
+    <value>An unexpected error occurred while updating the device.</value>
+  </data>
 </root>

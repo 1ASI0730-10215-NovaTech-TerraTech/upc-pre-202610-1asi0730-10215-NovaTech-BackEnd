@@ -6,6 +6,6 @@ namespace NovaTech.TerraTech.Platform.Monitoring.Application.Services;
 
 public interface IFieldCommandService
 {
- 
     Task<Result<Field>> Handle(CreateFieldCommand command, CancellationToken cancellationToken = default);
+    Task<Result<Field>> Handle(UpdateFieldCommand command, CancellationToken cancellationToken = default);
 }

@@ -15,17 +15,18 @@ public class FieldCommandService(
     ILogger<FieldCommandService> logger)
     : IFieldCommandService
 {
-     /// <inheritdoc />
+    /// <inheritdoc />
     public async Task<Result<Field>> Handle(CreateFieldCommand command,
         CancellationToken cancellationToken = default)
     {
+        // Verificar si ya existe un campo con el mismo SoilType y Location
         var existingSource =
             await fieldRepository.FindBySoilTypeAndLocationLatLongAsync(command.SoilType, command.LocationLatLong,
                 cancellationToken);
         if (existingSource != null)
         {
             logger.LogWarning(
-                "Duplicate favorite source rejected for SoilType {SoilType} and LocationLatLong {LocationLatLong}",
+                "Duplicate field rejected for SoilType {SoilType} and LocationLatLong {LocationLatLong}",
                 command.SoilType,
                 command.LocationLatLong);
             return Result<Field>.Failure(
@@ -34,24 +35,24 @@ public class FieldCommandService(
 
         try
         {
-            var Field = new Field(command);
-            await fieldRepository.AddAsync(Field, cancellationToken);
+            var field = new Field(command);
+            await fieldRepository.AddAsync(field, cancellationToken);
             await unitOfWork.CompleteAsync(cancellationToken);
-            return Result<Field>.Success(Field);
+            return Result<Field>.Success(field);
         }
         catch (ArgumentException ex)
         {
             logger.LogWarning(ex,
-                "Invalid arguments while creating favorite source for SoilType {SoilType} and LocationLatLong {LocationLatLong}",
+                "Invalid arguments while creating field for SoilType {SoilType} and LocationLatLong {LocationLatLong}",
                 command.SoilType,
                 command.LocationLatLong);
             return Result<Field>.Failure(
-                CreateFieldError.UnexpectedError, ex.Message);
+                CreateFieldError.InvalidData, ex.Message);
         }
         catch (DbUpdateException ex) when (IsDuplicateKeyViolation(ex))
         {
             logger.LogWarning(ex,
-                "Duplicate key violation creating favorite source for SoilType {SoilType} and LocationLatLong {LocationLatLong}",
+                "Duplicate key violation creating field for SoilType {SoilType} and LocationLatLong {LocationLatLong}",
                 command.SoilType,
                 command.LocationLatLong);
             return Result<Field>.Failure(
@@ -60,7 +61,7 @@ public class FieldCommandService(
         catch (DbUpdateException ex)
         {
             logger.LogError(ex,
-                "Database update failed creating favorite source for SoilType {SoilType} and LocationLatLong {LocationLatLong}",
+                "Database update failed creating field for SoilType {SoilType} and LocationLatLong {LocationLatLong}",
                 command.SoilType,
                 command.LocationLatLong);
             return Result<Field>.Failure(
@@ -69,11 +70,52 @@ public class FieldCommandService(
         catch (Exception ex)
         {
             logger.LogError(ex,
-                "Unexpected error creating favorite source for SoilType {SoilType} and LocationLatLong {LocationLatLong}",
+                "Unexpected error creating field for SoilType {SoilType} and LocationLatLong {LocationLatLong}",
                 command.SoilType,
                 command.LocationLatLong);
             return Result<Field>.Failure(
                 CreateFieldError.UnexpectedError, ex.Message);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<Field>> Handle(UpdateFieldCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Buscar el field existente por ID
+            var field = await fieldRepository.FindByIdAsync(command.Id, cancellationToken);
+            if (field is null)
+            {
+                logger.LogWarning("Field with id {Id} not found for update", command.Id);
+                return Result<Field>.Failure(
+                    CreateFieldError.FieldNotFound,
+                    $"Field with id {command.Id} not found.");
+            }
+
+            // Actualizar la entidad con los nuevos valores
+            field.Update(command);
+            fieldRepository.Update(field);
+            await unitOfWork.CompleteAsync(cancellationToken);
+
+            logger.LogInformation("Field {Id} updated successfully", command.Id);
+            return Result<Field>.Success(field);
+        }
+        catch (ArgumentException ex)
+        {
+            logger.LogWarning(ex, "Invalid arguments while updating field {Id}", command.Id);
+            return Result<Field>.Failure(CreateFieldError.InvalidData, ex.Message);
+        }
+        catch (DbUpdateException ex)
+        {
+            logger.LogError(ex, "Database error while updating field {Id}", command.Id);
+            return Result<Field>.Failure(CreateFieldError.UnexpectedError, "Database error occurred.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error updating field {Id}", command.Id);
+            return Result<Field>.Failure(CreateFieldError.UnexpectedError, ex.Message);
         }
     }
 

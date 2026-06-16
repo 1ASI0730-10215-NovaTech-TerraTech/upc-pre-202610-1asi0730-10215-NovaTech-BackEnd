@@ -9,4 +9,10 @@
     <data name="InternalServerError" xml:space="preserve">
     <value>Internal Server Error</value>
   </data>
+  <data name="FieldNotFound" xml:space="preserve">
+    <value>Field not found.</value>
+  </data>
+  <data name="UnexpectedErrorUpdatingField" xml:space="preserve">
+    <value>An unexpected error occurred while updating the field.</value>
+  </data>
 </root>

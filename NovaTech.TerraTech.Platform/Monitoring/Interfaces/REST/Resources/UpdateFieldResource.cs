@@ -1,13 +1,10 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST.Resources;
 
-[SwaggerSchema(Description = "Request payload to create a Field")]
-public record CreateFieldResource(
-    [Required]
-    [SwaggerParameter(Description = "Profile ID (owner of the field)")] int ProfileId,
-    
+[SwaggerSchema(Description = "Request payload to update a Field")]
+public record UpdateFieldResource(
     [Required]
     [MaxLength(100)]
     [SwaggerParameter(Description = "Field name (max 100 characters)")] string Name,

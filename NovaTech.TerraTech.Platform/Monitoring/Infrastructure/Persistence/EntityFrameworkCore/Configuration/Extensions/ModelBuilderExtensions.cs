@@ -10,7 +10,9 @@ public static class ModelBuilderExtensions
         builder.Entity<Field>(field =>
         {
             field.HasKey(f => f.Id);
-            field.Property(f => f.Id).IsRequired().ValueGeneratedOnAdd();
+            field.Property(f => f.Id)
+                .IsRequired()
+                .ValueGeneratedOnAdd();
             
             field.OwnsOne(f => f.ProfileId, profile =>
             {
@@ -47,7 +49,11 @@ public static class ModelBuilderExtensions
         builder.Entity<Device>(device =>
         {
             device.HasKey(d => d.Id);
-            device.Property(d => d.Id).IsRequired().ValueGeneratedOnAdd();
+            device.Property(d => d.Id)
+                .IsRequired()
+                .ValueGeneratedOnAdd();
+            
+            device.Ignore(d => d.MacAddress);
             
             device.OwnsOne(d => d.FieldId, fieldId =>
             {
@@ -58,22 +64,28 @@ public static class ModelBuilderExtensions
             device.OwnsOne(d => d.MacAddress, mac =>
             {
                 mac.WithOwner().HasForeignKey("Id");
-                mac.Property(m => m.Value).HasColumnName("MacAddress").HasMaxLength(17).IsRequired();
+                mac.Property(m => m.Value)
+                    .HasColumnName("MacAddress")
+                    .HasMaxLength(17)
+                    .IsRequired();
             });
             
             device.OwnsOne(d => d.Status, status =>
             {
                 status.WithOwner().HasForeignKey("Id");
-                status.Property(s => s.Value).HasColumnName("Status").HasMaxLength(20).IsRequired();
+                status.Property(s => s.Value)
+                    .HasColumnName("Status")
+                    .HasMaxLength(20)
+                    .IsRequired();
             });
             
             device.OwnsOne(d => d.LastSync, lastSync =>
             {
                 lastSync.WithOwner().HasForeignKey("Id");
-                lastSync.Property(l => l.Value).HasColumnName("LastSync").IsRequired();
+                lastSync.Property(l => l.Value)
+                    .HasColumnName("LastSync")
+                    .IsRequired();
             });
-            
-            device.HasIndex(d => d.MacAddress.Value).IsUnique();
         });
     }
 }

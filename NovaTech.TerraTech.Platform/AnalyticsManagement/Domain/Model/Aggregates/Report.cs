@@ -34,4 +34,12 @@ public partial class Report
     public Variance Variance { get; private set; }
     public StandardDeviation StandardDeviation { get; private set; }
     public TechnicalInterpretation TechnicalInterpretation { get; private set; }
+    
+    public void UpdateStatistics(double mean, double variance, double stdDev, string interpretation)
+    {
+        MeanValue = new MeanValue(mean);
+        Variance = new Variance(variance);
+        StandardDeviation = new StandardDeviation(stdDev);
+        TechnicalInterpretation = new TechnicalInterpretation(interpretation);
+    }
 }

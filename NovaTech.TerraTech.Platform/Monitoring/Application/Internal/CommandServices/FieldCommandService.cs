@@ -15,11 +15,9 @@ public class FieldCommandService(
     ILogger<FieldCommandService> logger)
     : IFieldCommandService
 {
-    /// <inheritdoc />
     public async Task<Result<Field>> Handle(CreateFieldCommand command,
         CancellationToken cancellationToken = default)
     {
-        // Verificar si ya existe un campo con el mismo SoilType y Location
         var existingSource =
             await fieldRepository.FindBySoilTypeAndLocationLatLongAsync(command.SoilType, command.LocationLatLong,
                 cancellationToken);
@@ -77,14 +75,12 @@ public class FieldCommandService(
                 CreateFieldError.UnexpectedError, ex.Message);
         }
     }
-
-    /// <inheritdoc />
+    
     public async Task<Result<Field>> Handle(UpdateFieldCommand command,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            // Buscar el field existente por ID
             var field = await fieldRepository.FindByIdAsync(command.Id, cancellationToken);
             if (field is null)
             {
@@ -93,8 +89,7 @@ public class FieldCommandService(
                     CreateFieldError.FieldNotFound,
                     $"Field with id {command.Id} not found.");
             }
-
-            // Actualizar la entidad con los nuevos valores
+            
             field.Update(command);
             fieldRepository.Update(field);
             await unitOfWork.CompleteAsync(cancellationToken);
@@ -118,12 +113,7 @@ public class FieldCommandService(
             return Result<Field>.Failure(CreateFieldError.UnexpectedError, ex.Message);
         }
     }
-
-    /// <summary>
-    /// Determines whether a DbUpdateException represents a duplicate key constraint violation.
-    /// </summary>
-    /// <param name="exception">The exception to inspect.</param>
-    /// <returns>True if the exception is due to a MySQL duplicate key error (code 1062), false otherwise.</returns>
+    
     private static bool IsDuplicateKeyViolation(DbUpdateException exception)
     {
         for (Exception? current = exception; current is not null; current = current.InnerException)

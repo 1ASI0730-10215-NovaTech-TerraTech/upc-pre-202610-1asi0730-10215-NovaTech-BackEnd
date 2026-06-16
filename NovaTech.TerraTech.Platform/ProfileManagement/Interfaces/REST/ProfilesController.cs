@@ -5,6 +5,7 @@ using NovaTech.TerraTech.Platform.ProfileManagement.Application.QueryServices;
 using NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.Queries;
 using NovaTech.TerraTech.Platform.ProfileManagement.Interfaces.REST.Resources;
 using NovaTech.TerraTech.Platform.ProfileManagement.Interfaces.REST.Transform;
+using NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.Commands;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace NovaTech.TerraTech.Platform.ProfileManagement.Interfaces.REST;
@@ -67,5 +68,24 @@ public class ProfilesController(
         
         var resource = ProfileResourceFromEntityAssembler.ToResourceFromEntity(profile);
         return Ok(resource);
+    }
+    
+    [HttpPut("{profileId:int}")]
+    [SwaggerOperation(
+        Summary = "Update Profile", 
+        Description = "Update an existing profile.", 
+        OperationId = "UpdateProfile")]
+    [SwaggerResponse(200, "The profile was updated.", typeof(ProfileResource))]
+    [SwaggerResponse(404, "The profile was not found.")]
+    public async Task<IActionResult> UpdateProfile(int profileId, [FromBody] UpdateProfileResource resource) // <-- ¡Aquí cambió!
+    {
+        
+        var command = new UpdateProfileCommand(profileId, resource.FundoName, resource.ContactPhone, resource.MoistureThreshold, resource.TempThreshold);
+        var profile = await profileCommandService.Handle(command);
+        
+        if (profile == null) return NotFound();
+        
+        var profileResource = ProfileResourceFromEntityAssembler.ToResourceFromEntity(profile);
+        return Ok(profileResource);
     }
 }

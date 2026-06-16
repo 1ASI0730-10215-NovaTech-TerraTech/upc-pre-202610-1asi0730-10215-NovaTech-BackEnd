@@ -4,6 +4,10 @@ namespace NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST.Resources;
 
 [SwaggerSchema(Description = "A Field resource")]
 public record FieldResource(
-    [SwaggerParameter(Description = "The server-generated ID of the Field")] int Id,
-    [SwaggerParameter(Description = "The SoilType provided by SoilType")] string SoilType,
-    [SwaggerParameter(Description = "The LocationLatLong from LocationLatLong")] string LocationLatLong);
+    [SwaggerParameter(Description = "Server-generated ID")] int Id,
+    [SwaggerParameter(Description = "Profile ID")] int ProfileId,
+    [SwaggerParameter(Description = "Field name")] string Name,
+    [SwaggerParameter(Description = "Size in square meters")] double SizeM2,
+    [SwaggerParameter(Description = "Soil type")] string SoilType,
+    [SwaggerParameter(Description = "Location as string")] string LocationLatLong
+);

@@ -12,7 +12,7 @@ namespace NovaTech.TerraTech.Platform.CommunityManagement.Interfaces.REST;
 [ApiController]
 [Route("api/v1/community-profiles")]
 [Produces("application/json")]
-[Tags("Community")]
+[Tags("Communities")]
 public class CommunityProfilesController(
     ICommunityProfileService profileService,
     ILogger<CommunityProfilesController> logger) : ControllerBase

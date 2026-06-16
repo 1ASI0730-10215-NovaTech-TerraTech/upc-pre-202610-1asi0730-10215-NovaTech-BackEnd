@@ -17,8 +17,8 @@ namespace NovaTech.TerraTech.Platform.Iam.Interface.Rest;
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces(MediaTypeNames.Application.Json)]
-[SwaggerTag("Available User endpoints")]
-public class UserController(
+[SwaggerTag("Available Users endpoints")]
+public class UsersController(
     IUserQueryService userQueryService, IStringLocalizer<ErrorMessages> errorLocalizer,
     ProblemDetailsFactory problemDetailsFactory): ControllerBase
 {

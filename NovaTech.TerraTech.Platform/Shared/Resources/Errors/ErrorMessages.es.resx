@@ -65,4 +65,10 @@
     <data name="PublishingError.InternalServerError" xml:space="preserve">
     <value>Ocurrió un error interno inesperado en Publicación.</value>
   </data>
+  <data name="ReportNotFound" xml:space="preserve">
+    <value>Reporte no encontrado.</value>
+  </data>
+  <data name="UnexpectedErrorUpdatingReport" xml:space="preserve">
+    <value>Ocurrió un error inesperado al actualizar el reporte.</value>
+  </data>
 </root>

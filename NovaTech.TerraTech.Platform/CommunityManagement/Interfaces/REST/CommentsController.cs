@@ -12,7 +12,7 @@ namespace NovaTech.TerraTech.Platform.CommunityManagement.Interfaces.REST;
 [ApiController]
 [Route("api/v1/comments")]
 [Produces("application/json")]
-[Tags("Community")] 
+[Tags("Communities")] 
 public class CommentsController(
     ICommentService commentService,
     ILogger<CommentsController> logger) : ControllerBase

@@ -70,4 +70,42 @@ public class ReportCommandService(
         }
         return false;
     }
+    
+    public async Task<Result<Report>> Handle(UpdateReportCommand command, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var report = await reportRepository.FindByIdAsync(command.Id, cancellationToken);
+            if (report is null)
+            {
+                logger.LogWarning("Report with id {Id} not found for update", command.Id);
+                return Result<Report>.Failure(
+                    UpdateReportError.ReportNotFound,
+                    $"Report with id {command.Id} not found.");
+            }
+
+            // Update entity (value objects will validate)
+            report.UpdateStatistics(
+                command.MeanValue,
+                command.Variance,
+                command.StandardDeviation,
+                command.TechnicalInterpretation);
+        
+            reportRepository.Update(report);
+            await unitOfWork.CompleteAsync(cancellationToken);
+        
+            logger.LogInformation("Report {Id} updated successfully", command.Id);
+            return Result<Report>.Success(report);
+        }
+        catch (ArgumentException ex)
+        {
+            logger.LogWarning(ex, "Invalid arguments while updating report {Id}", command.Id);
+            return Result<Report>.Failure(UpdateReportError.InvalidData, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error updating report {Id}", command.Id);
+            return Result<Report>.Failure(UpdateReportError.UnexpectedError, ex.Message);
+        }
+    }
 }

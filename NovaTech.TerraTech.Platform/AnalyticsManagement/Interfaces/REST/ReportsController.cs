@@ -2,10 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using NovaTech.TerraTech.Platform.AnalyticsManagement.Application.Services;
+using NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Model.Commands;
 using NovaTech.TerraTech.Platform.AnalyticsManagement.Interfaces.REST.Resources;
 using NovaTech.TerraTech.Platform.AnalyticsManagement.Interfaces.REST.Transform;
 using NovaTech.TerraTech.Platform.Shared.Resources;
 using Swashbuckle.AspNetCore.Annotations;
+using NovaTech.TerraTech.Platform.AnalyticsManagement.Application.Errors;
 
 namespace NovaTech.TerraTech.Platform.AnalyticsManagement.Interfaces.REST;
 
@@ -50,6 +52,62 @@ public class ReportsController(
                 title: localizer["UnexpectedServerError"].Value,
                 detail: localizer["UnexpectedErrorCreatingReport"].Value,
                 statusCode: 500);
+        }
+    }
+
+    [HttpPut("{id:int}")]
+    [SwaggerOperation(
+        Summary = "Updates an existing report",
+        Description = "Updates the statistical values and interpretation of a report",
+        OperationId = "UpdateReport")]
+    [SwaggerResponse(200, "The report was updated", typeof(ReportResource))]
+    [SwaggerResponse(400, "Invalid request data", typeof(string))]
+    [SwaggerResponse(404, "Report not found", typeof(string))]
+    [SwaggerResponse(500, "Unexpected server error", typeof(ProblemDetails))]
+    public async Task<ActionResult> UpdateReport(
+        [FromRoute] int id,
+        [FromBody] UpdateReportResource resource,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var command = new UpdateReportCommand(
+                id,
+                resource.MeanValue,
+                resource.Variance,
+                resource.StandardDeviation,
+                resource.TechnicalInterpretation);
+            
+            var result = await reportCommandService.Handle(command, cancellationToken);
+            
+            if (result.IsFailure)
+            {
+                return result.Error switch
+                {
+                    UpdateReportError.ReportNotFound => NotFound(new { error = localizer["ReportNotFound"].Value }),
+                    UpdateReportError.InvalidData => BadRequest(new { error = result.Message }),
+                    _ => Problem(
+                        title: localizer["UnexpectedServerError"].Value,
+                        detail: result.Message,
+                        statusCode: StatusCodes.Status500InternalServerError)
+                };
+            }
+            
+            var resourceResponse = ReportResourceFromEntityAssembler.ToResourceFromEntity(result.Value);
+            return Ok(resourceResponse);
+        }
+        catch (ArgumentException ex)
+        {
+            logger.LogWarning(ex, "Validation failed while updating report with id {ReportId}", id);
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error while updating report with id {ReportId}", id);
+            return Problem(
+                title: localizer["UnexpectedServerError"].Value,
+                detail: localizer["UnexpectedErrorUpdatingReport"].Value,
+                statusCode: StatusCodes.Status500InternalServerError);
         }
     }
 

@@ -77,4 +77,7 @@
   <data name="UnexpectedErrorDeletingDevice" xml:space="preserve">
     <value>An unexpected error occurred while deleting the device.</value>
   </data>
+  <data name="FieldNotFound" xml:space="preserve">
+    <value />
+  </data>
 </root>

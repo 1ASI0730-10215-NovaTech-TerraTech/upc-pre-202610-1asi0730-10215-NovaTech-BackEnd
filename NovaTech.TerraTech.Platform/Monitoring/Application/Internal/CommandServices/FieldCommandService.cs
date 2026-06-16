@@ -114,6 +114,32 @@ public class FieldCommandService(
         }
     }
     
+    public async Task<Result<Field>> Handle(DeleteFieldCommand command, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var field = await fieldRepository.FindByIdAsync(command.Id, cancellationToken);
+            if (field is null)
+            {
+                logger.LogWarning("Field with id {Id} not found for deletion", command.Id);
+                return Result<Field>.Failure(
+                    CreateFieldError.FieldNotFound,
+                    $"Field with id {command.Id} not found.");
+            }
+
+            fieldRepository.Remove(field);
+            await unitOfWork.CompleteAsync(cancellationToken);
+
+            logger.LogInformation("Field {Id} deleted successfully", command.Id);
+            return Result<Field>.Success(field);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error deleting field {Id}", command.Id);
+            return Result<Field>.Failure(CreateFieldError.UnexpectedError, ex.Message);
+        }
+    }
+    
     private static bool IsDuplicateKeyViolation(DbUpdateException exception)
     {
         for (Exception? current = exception; current is not null; current = current.InnerException)

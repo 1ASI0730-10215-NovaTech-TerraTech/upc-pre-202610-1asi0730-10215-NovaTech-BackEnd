@@ -66,4 +66,24 @@ public class CommentService(
             return Result<Comment>.Failure(CommunityError.DatabaseError, "An unexpected error occurred while updating the comment");
         }
     }
+    
+    public async Task<bool> Handle(DeleteCommentCommand command, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var comment = await commentRepository.FindByIdAsync(command.Id, cancellationToken);
+            if (comment == null) return false;
+
+            commentRepository.Remove(comment);
+            await unitOfWork.CompleteAsync(cancellationToken);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error deleting comment {Id}", command.Id);
+            return false;
+        }
+    }
+    
+
 }

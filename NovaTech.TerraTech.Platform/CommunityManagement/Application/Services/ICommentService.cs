@@ -18,4 +18,6 @@ public interface ICommentService
     Task<Comment?> Handle(GetCommentByIdQuery query, CancellationToken cancellationToken = default); 
     
     Task<Result<Comment>> Handle(UpdateCommentCommand command, CancellationToken cancellationToken = default);
+    
+    Task<bool> Handle(DeleteCommentCommand command, CancellationToken cancellationToken = default);
 }

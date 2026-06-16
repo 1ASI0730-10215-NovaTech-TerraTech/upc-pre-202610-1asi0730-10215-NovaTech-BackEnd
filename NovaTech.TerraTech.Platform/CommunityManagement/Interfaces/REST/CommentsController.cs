@@ -101,4 +101,19 @@ public class CommentsController(
             return Problem(title: "Unexpected server error", statusCode: 500);
         }
     }
+    
+    [HttpDelete("{id}")]
+    [SwaggerOperation(Summary = "Deletes a comment", Description = "Deletes a comment by its ID")]
+    [SwaggerResponse(204, "Comment deleted")]
+    [SwaggerResponse(404, "Comment not found")]
+    public async Task<IActionResult> DeleteComment(int id, CancellationToken cancellationToken)
+    {
+        var command = new DeleteCommentCommand(id);
+        var result = await commentService.Handle(command, cancellationToken);
+
+        if (!result) return NotFound("Comment not found");
+
+        return NoContent();
+    }
+    
 }

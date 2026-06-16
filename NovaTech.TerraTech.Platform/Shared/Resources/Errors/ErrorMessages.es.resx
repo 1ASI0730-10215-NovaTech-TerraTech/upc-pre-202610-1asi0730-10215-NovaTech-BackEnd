@@ -71,4 +71,10 @@
   <data name="UnexpectedErrorUpdatingReport" xml:space="preserve">
     <value>Ocurrió un error inesperado al actualizar el reporte.</value>
   </data>
+  <data name="DeviceNotFound" xml:space="preserve">
+    <value>Dispositivo no encontrado.</value>
+  </data>
+  <data name="UnexpectedErrorDeletingDevice" xml:space="preserve">
+    <value>Ocurrió un error inesperado al eliminar el dispositivo.</value>
+  </data>
 </root>

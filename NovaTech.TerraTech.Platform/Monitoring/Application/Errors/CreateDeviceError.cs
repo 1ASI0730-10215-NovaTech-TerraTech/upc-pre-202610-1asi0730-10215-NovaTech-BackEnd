@@ -8,5 +8,6 @@ public enum CreateDeviceError
     DuplicateDevice,
     FieldNotFound,
     InvalidData,
+    DeviceNotFound,
     UnexpectedError
 }

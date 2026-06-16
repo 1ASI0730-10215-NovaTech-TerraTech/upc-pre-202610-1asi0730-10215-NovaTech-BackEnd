@@ -24,4 +24,7 @@
   <data name="UnexpectedErrorUpdatingDevice" xml:space="preserve">
     <value>An unexpected error occurred while updating the device.</value>
   </data>
+  <data name="DeviceNotFound" xml:space="preserve">
+    <value />
+  </data>
 </root>

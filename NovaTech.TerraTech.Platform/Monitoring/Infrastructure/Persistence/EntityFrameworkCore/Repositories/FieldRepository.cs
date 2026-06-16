@@ -16,8 +16,7 @@ public class FieldRepository(AppDbContext context) : BaseRepository<Field>(conte
             .Where(f => f.SoilType.Value == SoilType.Value)
             .ToListAsync(cancellationToken);
     }
-
-    /// <inheritdoc />
+    
     public async Task<Field?> FindBySoilTypeAndLocationLatLongAsync(SoilType SoilType, LocationLatLong LocationLatLong,
         CancellationToken cancellationToken = default)
     {

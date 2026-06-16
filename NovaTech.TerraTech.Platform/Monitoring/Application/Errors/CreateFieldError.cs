@@ -7,5 +7,5 @@ public enum CreateFieldError
     DuplicateField,
     UnexpectedError,
     FieldNotFound,     
-    InvalidData         
+    InvalidData       
 }

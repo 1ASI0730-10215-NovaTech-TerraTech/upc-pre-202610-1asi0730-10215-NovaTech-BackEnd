@@ -86,6 +86,61 @@ public class DevicesController(
         }
     }
     
+    [HttpGet]
+    [SwaggerOperation(
+        Summary = "Gets all devices",
+        Description = "Retrieves all available devices",
+        OperationId = "GetAllDevices")]
+    [SwaggerResponse(200, "List of all devices", typeof(IEnumerable<DeviceResource>))]
+    public async Task<ActionResult<IEnumerable<DeviceResource>>> GetAllDevices(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var devices = await deviceQueryService.GetAllDevicesAsync(cancellationToken);
+            var resources = devices.Select(DeviceResourceFromEntityAssembler.ToResourceFromEntity);
+            return Ok(resources);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error while retrieving all devices");
+            return Problem(
+                title: localizer["UnexpectedServerError"].Value,
+                detail: localizer["UnexpectedErrorProcessingRequest"].Value,
+                statusCode: StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpGet("field/{fieldId:int}")]
+    [SwaggerOperation(
+        Summary = "Gets devices by field id",
+        Description = "Retrieves all devices belonging to a specific field",
+        OperationId = "GetDevicesByFieldId")]
+    [SwaggerResponse(200, "List of devices for the field", typeof(IEnumerable<DeviceResource>))]
+    [SwaggerResponse(404, "Field not found")]
+    public async Task<ActionResult<IEnumerable<DeviceResource>>> GetDevicesByFieldId(
+        int fieldId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var devices = await deviceQueryService.GetDevicesByFieldIdAsync(fieldId, cancellationToken);
+            var resources = devices.Select(DeviceResourceFromEntityAssembler.ToResourceFromEntity);
+            return Ok(resources);
+        }
+        catch (ArgumentException)
+        {
+            return NotFound(new { error = localizer["FieldNotFound"].Value });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error while retrieving devices for field {FieldId}", fieldId);
+            return Problem(
+                title: localizer["UnexpectedServerError"].Value,
+                detail: localizer["UnexpectedErrorProcessingRequest"].Value,
+                statusCode: StatusCodes.Status500InternalServerError);
+        }
+    }
+    
     [HttpPut("{id:int}")]
     [SwaggerOperation(
         Summary = "Updates a device",
@@ -174,61 +229,6 @@ public class DevicesController(
             return Problem(
                 title: localizer["UnexpectedServerError"].Value,
                 detail: localizer["UnexpectedErrorDeletingDevice"].Value,
-                statusCode: StatusCodes.Status500InternalServerError);
-        }
-    }
-    
-    [HttpGet]
-    [SwaggerOperation(
-        Summary = "Gets all devices",
-        Description = "Retrieves all available devices",
-        OperationId = "GetAllDevices")]
-    [SwaggerResponse(200, "List of all devices", typeof(IEnumerable<DeviceResource>))]
-    public async Task<ActionResult<IEnumerable<DeviceResource>>> GetAllDevices(CancellationToken cancellationToken)
-    {
-        try
-        {
-            var devices = await deviceQueryService.GetAllDevicesAsync(cancellationToken);
-            var resources = devices.Select(DeviceResourceFromEntityAssembler.ToResourceFromEntity);
-            return Ok(resources);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Unexpected error while retrieving all devices");
-            return Problem(
-                title: localizer["UnexpectedServerError"].Value,
-                detail: localizer["UnexpectedErrorProcessingRequest"].Value,
-                statusCode: StatusCodes.Status500InternalServerError);
-        }
-    }
-    
-    [HttpGet("field/{fieldId:int}")]
-    [SwaggerOperation(
-        Summary = "Gets devices by field id",
-        Description = "Retrieves all devices belonging to a specific field",
-        OperationId = "GetDevicesByFieldId")]
-    [SwaggerResponse(200, "List of devices for the field", typeof(IEnumerable<DeviceResource>))]
-    [SwaggerResponse(404, "Field not found")]
-    public async Task<ActionResult<IEnumerable<DeviceResource>>> GetDevicesByFieldId(
-        int fieldId,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var devices = await deviceQueryService.GetDevicesByFieldIdAsync(fieldId, cancellationToken);
-            var resources = devices.Select(DeviceResourceFromEntityAssembler.ToResourceFromEntity);
-            return Ok(resources);
-        }
-        catch (ArgumentException)
-        {
-            return NotFound(new { error = localizer["FieldNotFound"].Value });
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Unexpected error while retrieving devices for field {FieldId}", fieldId);
-            return Problem(
-                title: localizer["UnexpectedServerError"].Value,
-                detail: localizer["UnexpectedErrorProcessingRequest"].Value,
                 statusCode: StatusCodes.Status500InternalServerError);
         }
     }

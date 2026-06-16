@@ -93,6 +93,32 @@ public class DeviceCommandService(
             return Result<Device>.Failure(CreateDeviceError.UnexpectedError, ex.Message);
         }
     }
+    
+    public async Task<Result<Device>> Handle(DeleteDeviceCommand command, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var device = await deviceRepository.FindByIdAsync(command.Id, cancellationToken);
+            if (device is null)
+            {
+                logger.LogWarning("Device with id {Id} not found for deletion", command.Id);
+                return Result<Device>.Failure(
+                    CreateDeviceError.DeviceNotFound,
+                    $"Device with id {command.Id} not found.");
+            }
+
+            deviceRepository.Remove(device);
+            await unitOfWork.CompleteAsync(cancellationToken);
+
+            logger.LogInformation("Device {Id} deleted successfully", command.Id);
+            return Result<Device>.Success(device);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error deleting device {Id}", command.Id);
+            return Result<Device>.Failure(CreateDeviceError.UnexpectedError, ex.Message);
+        }
+    }
 
     private static bool IsDuplicateKeyViolation(DbUpdateException exception)
     {

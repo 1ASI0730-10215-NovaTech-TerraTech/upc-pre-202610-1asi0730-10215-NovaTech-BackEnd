@@ -17,4 +17,18 @@ public class ProfileCommandService(IProfileRepository profileRepository, IUnitOf
         
         return profile;
     }
+    
+    public async Task<Profile?> Handle(UpdateProfileCommand command)
+    {
+        
+        var profile = await profileRepository.FindByIdAsync(command.Id);
+        if (profile == null) return null;
+        
+        profile.Update(command);
+        
+        profileRepository.Update(profile);
+        await unitOfWork.CompleteAsync();
+        
+        return profile;
+    }
 }

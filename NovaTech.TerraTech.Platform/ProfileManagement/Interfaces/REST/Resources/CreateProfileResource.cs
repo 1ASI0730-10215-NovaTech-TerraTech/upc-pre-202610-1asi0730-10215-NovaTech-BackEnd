@@ -1,12 +1,13 @@
-using System.Text.Json.Serialization;
+using System.ComponentModel.DataAnnotations;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace NovaTech.TerraTech.Platform.ProfileManagement.Interfaces.REST.Resources;
 
-
+[SwaggerSchema(Description = "Request payload to create a profile")]
 public record CreateProfileResource(
-    [property: JsonPropertyName("user_id")] string UserId,
-    [property: JsonPropertyName("fundo_name")] string FundoName,
-    [property: JsonPropertyName("contact_phone")] string ContactPhone,
-    [property: JsonPropertyName("moisture_threshold")] double MoistureThreshold,
-    [property: JsonPropertyName("temp_threshold")] double TempThreshold
+    [Required] [SwaggerParameter(Description = "User identifier")] string UserId,
+    [Required] [SwaggerParameter(Description = "Name of the fundo/farm")] string FundoName,
+    [Required] [SwaggerParameter(Description = "Contact phone number")] string ContactPhone,
+    [Required] [SwaggerParameter(Description = "Moisture threshold")] double MoistureThreshold,
+    [Required] [SwaggerParameter(Description = "Temperature threshold")] double TempThreshold
 );

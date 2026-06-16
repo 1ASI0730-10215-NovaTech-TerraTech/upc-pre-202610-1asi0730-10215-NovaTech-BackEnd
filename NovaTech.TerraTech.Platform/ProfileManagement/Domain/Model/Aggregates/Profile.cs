@@ -36,6 +36,13 @@ public partial class Profile
         Thresholds = new ProfileThresholds(command.MoistureThreshold, command.TempThreshold);
     }
     
+    public void Update(UpdateProfileCommand command)
+        {
+            Name = new FundoName(command.FundoName);
+            Phone = new ContactPhone(command.ContactPhone);
+            Thresholds = new ProfileThresholds(command.MoistureThreshold, command.TempThreshold);
+        }
+    
     public int Id { get; private set; }
     public string UserId { get; private set; }
     public FundoName Name { get; private set; }

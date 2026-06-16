@@ -1,13 +1,13 @@
-using System.Text.Json.Serialization;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace NovaTech.TerraTech.Platform.ProfileManagement.Interfaces.REST.Resources;
 
-
+[SwaggerSchema(Description = "Profile resource")]
 public record ProfileResource(
-    [property: JsonPropertyName("id")] int Id,
-    [property: JsonPropertyName("user_id")] string UserId,
-    [property: JsonPropertyName("fundo_name")] string FundoName,
-    [property: JsonPropertyName("contact_phone")] string ContactPhone,
-    [property: JsonPropertyName("moisture_threshold")] double MoistureThreshold,
-    [property: JsonPropertyName("temp_threshold")] double TempThreshold
+    [SwaggerParameter(Description = "Profile identifier")] int Id,
+    [SwaggerParameter(Description = "User identifier")] string UserId,
+    [SwaggerParameter(Description = "Name of the fundo/farm")] string FundoName,
+    [SwaggerParameter(Description = "Contact phone number")] string ContactPhone,
+    [SwaggerParameter(Description = "Moisture threshold")] double MoistureThreshold,
+    [SwaggerParameter(Description = "Temperature threshold")] double TempThreshold
 );

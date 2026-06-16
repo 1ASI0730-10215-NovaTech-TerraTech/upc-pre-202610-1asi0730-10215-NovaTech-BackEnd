@@ -14,7 +14,7 @@ namespace NovaTech.TerraTech.Platform.CommercialManagement.Interfaces.REST;
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
-[Tags("Commercial")]
+[Tags("Commercials")]
 public class OrdersController(
     IOrderService orderService,
     ILogger<OrdersController> logger) : ControllerBase

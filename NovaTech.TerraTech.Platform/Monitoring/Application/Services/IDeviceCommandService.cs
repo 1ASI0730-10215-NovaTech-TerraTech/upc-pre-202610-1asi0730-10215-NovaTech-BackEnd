@@ -8,4 +8,5 @@ public interface IDeviceCommandService
 {
     Task<Result<Device>> Handle(CreateDeviceCommand command, CancellationToken cancellationToken = default);
     Task<Result<Device>> Handle(UpdateDeviceCommand command, CancellationToken cancellationToken = default);
+    Task<Result<Device>> Handle(DeleteDeviceCommand command, CancellationToken cancellationToken = default);
 }

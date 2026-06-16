@@ -72,4 +72,22 @@ public class CommunityProfileService(
             return Result<CommunityProfile>.Failure(CommunityError.DatabaseError, "An unexpected error occurred while updating the profile");
         }
     }
+    
+    public async Task<bool> Handle(DeleteCommunityProfileCommand command, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var profile = await profileRepository.FindByIdAsync(command.Id, cancellationToken);
+                if (profile == null) return false;
+    
+                profileRepository.Remove(profile);
+                await unitOfWork.CompleteAsync(cancellationToken);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error deleting community profile {Id}", command.Id);
+                return false;
+            }
+        }
 }

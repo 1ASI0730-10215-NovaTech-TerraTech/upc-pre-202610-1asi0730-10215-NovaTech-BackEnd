@@ -11,42 +11,69 @@ public static class ModelBuilderExtensions
         {
             field.HasKey(f => f.Id);
             field.Property(f => f.Id).IsRequired().ValueGeneratedOnAdd();
-
-            // ProfileId
+            
             field.OwnsOne(f => f.ProfileId, profile =>
             {
                 profile.WithOwner().HasForeignKey("Id");
                 profile.Property(p => p.Value).HasColumnName("ProfileId").IsRequired();
             });
-
-            // Name
+            
             field.OwnsOne(f => f.Name, name =>
             {
                 name.WithOwner().HasForeignKey("Id");
                 name.Property(n => n.Value).HasColumnName("Name").HasMaxLength(100).IsRequired();
             });
-
-            // SizeM2
+            
             field.OwnsOne(f => f.SizeM2, size =>
             {
                 size.WithOwner().HasForeignKey("Id");
                 size.Property(s => s.Value).HasColumnName("SizeM2").IsRequired();
             });
-
-            // SoilType
+            
             field.OwnsOne(f => f.SoilType, soil =>
             {
                 soil.WithOwner().HasForeignKey("Id");
                 soil.Property(s => s.Value).HasColumnName("SoilType").HasMaxLength(50).IsRequired();
             });
-
-            // LocationLatLong
+            
             field.OwnsOne(f => f.LocationLatLong, loc =>
             {
                 loc.WithOwner().HasForeignKey("Id");
                 loc.Property(l => l.Latitude).HasColumnName("Latitude").IsRequired();
                 loc.Property(l => l.Longitude).HasColumnName("Longitude").IsRequired();
             });
+        });
+        
+        builder.Entity<Device>(device =>
+        {
+            device.HasKey(d => d.Id);
+            device.Property(d => d.Id).IsRequired().ValueGeneratedOnAdd();
+            
+            device.OwnsOne(d => d.FieldId, fieldId =>
+            {
+                fieldId.WithOwner().HasForeignKey("Id");
+                fieldId.Property(f => f.Value).HasColumnName("FieldId").IsRequired();
+            });
+            
+            device.OwnsOne(d => d.MacAddress, mac =>
+            {
+                mac.WithOwner().HasForeignKey("Id");
+                mac.Property(m => m.Value).HasColumnName("MacAddress").HasMaxLength(17).IsRequired();
+            });
+            
+            device.OwnsOne(d => d.Status, status =>
+            {
+                status.WithOwner().HasForeignKey("Id");
+                status.Property(s => s.Value).HasColumnName("Status").HasMaxLength(20).IsRequired();
+            });
+            
+            device.OwnsOne(d => d.LastSync, lastSync =>
+            {
+                lastSync.WithOwner().HasForeignKey("Id");
+                lastSync.Property(l => l.Value).HasColumnName("LastSync").IsRequired();
+            });
+            
+            device.HasIndex(d => d.MacAddress.Value).IsUnique();
         });
     }
 }

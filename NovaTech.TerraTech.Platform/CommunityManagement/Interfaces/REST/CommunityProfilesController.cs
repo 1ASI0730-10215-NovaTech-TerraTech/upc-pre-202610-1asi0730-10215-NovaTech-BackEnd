@@ -124,4 +124,18 @@ public class CommunityProfilesController(
                 return Problem(title: "Unexpected server error", statusCode: 500);
             }
         }
+        
+    [HttpDelete("{id}")]
+        [SwaggerOperation(Summary = "Deletes a community profile", Description = "Deletes a community profile by its ID")]
+        [SwaggerResponse(204, "Profile deleted")]
+        [SwaggerResponse(404, "Profile not found")]
+        public async Task<IActionResult> DeleteProfile(int id, CancellationToken cancellationToken)
+        {
+            var command = new DeleteCommunityProfileCommand(id);
+            var result = await profileService.Handle(command, cancellationToken);
+    
+            if (!result) return NotFound("Profile not found");
+    
+            return NoContent();
+        }
 }

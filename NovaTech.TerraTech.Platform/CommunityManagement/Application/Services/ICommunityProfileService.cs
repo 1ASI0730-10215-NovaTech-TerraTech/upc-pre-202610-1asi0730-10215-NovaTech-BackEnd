@@ -17,4 +17,6 @@ public interface ICommunityProfileService
     Task<CommunityProfile?> Handle(GetCommunityProfileByProfileIdQuery query, CancellationToken cancellationToken = default);
     
     Task<Result<CommunityProfile>> Handle(UpdateCommunityProfileCommand command, CancellationToken cancellationToken = default);
+    
+    Task<bool> Handle(DeleteCommunityProfileCommand command, CancellationToken cancellationToken = default);
 }

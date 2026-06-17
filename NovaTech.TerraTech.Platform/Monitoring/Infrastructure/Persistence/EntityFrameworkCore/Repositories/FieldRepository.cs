@@ -9,11 +9,11 @@ namespace NovaTech.TerraTech.Platform.Monitoring.Infrastructure.Persistence.Enti
 
 public class FieldRepository(AppDbContext context) : BaseRepository<Field>(context), IFieldRepository
 {
-    public async Task<IEnumerable<Field>> FindBySoilTypeAsync(SoilType SoilType,
+    public async Task<IEnumerable<Field>> FindBySoilTypeAsync(SoilType soilType,
         CancellationToken cancellationToken = default)
     {
         return await Context.Set<Field>()
-            .Where(f => f.SoilType.Value == SoilType.Value)
+            .Where(f => f.SoilType.Value == soilType.Value)
             .ToListAsync(cancellationToken);
     }
     

@@ -1,5 +1,6 @@
 using NovaTech.TerraTech.Platform.Monitoring.Application.Services;
 using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates;
+using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects;
 using NovaTech.TerraTech.Platform.Monitoring.Domain.Repositories;
 
 namespace NovaTech.TerraTech.Platform.Monitoring.Application.Internal.QueryServices;
@@ -17,4 +18,7 @@ public class FieldQueryService(IFieldRepository fieldRepository)
     /// <inheritdoc />
     public async Task<IEnumerable<Field>> GetAllFieldsAsync(CancellationToken cancellationToken = default) =>
         await fieldRepository.ListAsync(cancellationToken);
+    
+    public async Task<IEnumerable<Field>> GetFieldsBySoilTypeAsync(SoilType soilType, CancellationToken cancellationToken = default)
+        => await fieldRepository.FindBySoilTypeAsync(soilType, cancellationToken);
 }

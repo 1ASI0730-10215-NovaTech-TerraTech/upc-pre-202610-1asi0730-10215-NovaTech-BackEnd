@@ -1,4 +1,5 @@
 using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates;
+using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects;
 
 namespace NovaTech.TerraTech.Platform.Monitoring.Application.Services;
 
@@ -21,4 +22,6 @@ public interface IFieldQueryService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A collection of all fields.</returns>
     Task<IEnumerable<Field>> GetAllFieldsAsync(CancellationToken cancellationToken = default);
+    
+    Task<IEnumerable<Field>> GetFieldsBySoilTypeAsync(SoilType soilType, CancellationToken cancellationToken = default);
 }

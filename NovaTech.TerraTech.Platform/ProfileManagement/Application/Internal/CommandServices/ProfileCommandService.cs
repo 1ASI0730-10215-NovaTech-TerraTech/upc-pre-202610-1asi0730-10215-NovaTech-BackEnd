@@ -31,4 +31,14 @@ public class ProfileCommandService(IProfileRepository profileRepository, IUnitOf
         
         return profile;
     }
+    
+    public async Task Handle(DeleteProfileCommand command)
+    {
+        var profile = await profileRepository.FindByIdAsync(command.Id);
+        
+        if (profile == null) return;
+        
+        profileRepository.Remove(profile);
+        await unitOfWork.CompleteAsync();
+    }
 }

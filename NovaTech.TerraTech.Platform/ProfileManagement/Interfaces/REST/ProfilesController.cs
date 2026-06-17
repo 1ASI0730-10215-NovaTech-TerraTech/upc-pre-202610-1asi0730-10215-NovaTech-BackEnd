@@ -88,4 +88,19 @@ public class ProfilesController(
         var profileResource = ProfileResourceFromEntityAssembler.ToResourceFromEntity(profile);
         return Ok(profileResource);
     }
+    
+    [HttpDelete("{profileId:int}")]
+        [SwaggerOperation(
+            Summary = "Delete Profile", 
+            Description = "Delete an existing profile.", 
+            OperationId = "DeleteProfile")]
+        [SwaggerResponse(204, "The profile was deleted successfully.")]
+        [SwaggerResponse(404, "The profile was not found.")]
+        public async Task<IActionResult> DeleteProfile(int profileId)
+        {
+            var command = new DeleteProfileCommand(profileId);
+            await profileCommandService.Handle(command);
+            
+            return NoContent(); 
+        }
 }

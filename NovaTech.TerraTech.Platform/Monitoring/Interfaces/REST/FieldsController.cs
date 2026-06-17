@@ -8,6 +8,7 @@ using NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST.Transform;
 using NovaTech.TerraTech.Platform.Shared.Resources;
 using Swashbuckle.AspNetCore.Annotations;
 using NovaTech.TerraTech.Platform.Monitoring.Application.Errors;
+using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects;
 
 namespace NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST;
 
@@ -103,6 +104,40 @@ public class FieldsController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Unexpected error while retrieving field with id {FieldId}", id);
+            return Problem(
+                title: localizer["UnexpectedServerError"].Value,
+                detail: localizer["UnexpectedErrorProcessingRequest"].Value,
+                statusCode: StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpGet("soiltype/{soilType}")]
+    [SwaggerOperation(
+        Summary = "Gets fields by soil type",
+        Description = "Retrieves all fields with a specific soil type",
+        OperationId = "GetFieldsBySoilType")]
+    [SwaggerResponse(200, "List of fields with the specified soil type", typeof(IEnumerable<FieldResource>))]
+    [SwaggerResponse(400, "Invalid soil type value")]
+    public async Task<ActionResult<IEnumerable<FieldResource>>> GetFieldsBySoilType(
+        [FromRoute] string soilType,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Crear el value object SoilType (el constructor valida)
+            var soilTypeValue = new SoilType(soilType);
+            var fields = await fieldQueryService.GetFieldsBySoilTypeAsync(soilTypeValue, cancellationToken);
+            var resources = fields.Select(FieldResourceFromEntityAssembler.ToResourceFromEntity);
+            return Ok(resources);
+        }
+        catch (ArgumentException ex)
+        {
+            logger.LogWarning(ex, "Invalid soil type value: {SoilType}", soilType);
+            return BadRequest(new { error = localizer["InvalidSoilType"].Value });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error while retrieving fields with soil type {SoilType}", soilType);
             return Problem(
                 title: localizer["UnexpectedServerError"].Value,
                 detail: localizer["UnexpectedErrorProcessingRequest"].Value,

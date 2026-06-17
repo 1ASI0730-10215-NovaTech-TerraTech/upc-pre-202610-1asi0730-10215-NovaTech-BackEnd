@@ -118,14 +118,13 @@ builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v1",
         new OpenApiInfo
         {
-            Title = "Acme.Center.Platform",
+            Title = "NovaTech.TerraTech.Platform",
             Version = "v1",
-            Description = "ACME Learning Center Platform API",
+            Description = "TerraTech Web Service Platform API",
             TermsOfService = new Uri("https://acme-learning.com/tos"),
             Contact = new OpenApiContact
             {
-                Name = "ACME Studios",
-                Email = "contact@acme.com"
+                Name = "NovaTech",
             },
             License = new OpenApiLicense
             {

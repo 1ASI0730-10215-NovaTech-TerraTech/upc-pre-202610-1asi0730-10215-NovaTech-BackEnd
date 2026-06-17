@@ -15,4 +15,7 @@ public class DeviceQueryService(IDeviceRepository deviceRepository) : IDeviceQue
 
     public async Task<IEnumerable<Device>> GetDevicesByFieldIdAsync(int fieldId, CancellationToken cancellationToken = default)
         => await deviceRepository.FindByFieldIdAsync(new FieldId(fieldId), cancellationToken);
+    
+    public async Task<IEnumerable<Device>> GetDevicesByStatusAsync(DeviceStatus status, CancellationToken cancellationToken = default)
+        => await deviceRepository.FindByStatusAsync(status, cancellationToken);
 }

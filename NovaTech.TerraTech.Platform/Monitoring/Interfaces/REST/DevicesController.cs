@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using NovaTech.TerraTech.Platform.Monitoring.Application.Services;
 using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Commands;
+using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects;
 using NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST.Resources;
 using NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST.Transform;
 using NovaTech.TerraTech.Platform.Shared.Resources;
@@ -58,6 +59,30 @@ public class DevicesController(
         }
     }
     
+    [HttpGet]
+    [SwaggerOperation(
+        Summary = "Gets all devices",
+        Description = "Retrieves all available devices",
+        OperationId = "GetAllDevices")]
+    [SwaggerResponse(200, "List of all devices", typeof(IEnumerable<DeviceResource>))]
+    public async Task<ActionResult<IEnumerable<DeviceResource>>> GetAllDevices(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var devices = await deviceQueryService.GetAllDevicesAsync(cancellationToken);
+            var resources = devices.Select(DeviceResourceFromEntityAssembler.ToResourceFromEntity);
+            return Ok(resources);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error while retrieving all devices");
+            return Problem(
+                title: localizer["UnexpectedServerError"].Value,
+                detail: localizer["UnexpectedErrorProcessingRequest"].Value,
+                statusCode: StatusCodes.Status500InternalServerError);
+        }
+    }
+    
     [HttpGet("{id:int}")]
     [SwaggerOperation(
         Summary = "Gets a device by id",
@@ -79,30 +104,6 @@ public class DevicesController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Unexpected error while retrieving device with id {DeviceId}", id);
-            return Problem(
-                title: localizer["UnexpectedServerError"].Value,
-                detail: localizer["UnexpectedErrorProcessingRequest"].Value,
-                statusCode: StatusCodes.Status500InternalServerError);
-        }
-    }
-    
-    [HttpGet]
-    [SwaggerOperation(
-        Summary = "Gets all devices",
-        Description = "Retrieves all available devices",
-        OperationId = "GetAllDevices")]
-    [SwaggerResponse(200, "List of all devices", typeof(IEnumerable<DeviceResource>))]
-    public async Task<ActionResult<IEnumerable<DeviceResource>>> GetAllDevices(CancellationToken cancellationToken)
-    {
-        try
-        {
-            var devices = await deviceQueryService.GetAllDevicesAsync(cancellationToken);
-            var resources = devices.Select(DeviceResourceFromEntityAssembler.ToResourceFromEntity);
-            return Ok(resources);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Unexpected error while retrieving all devices");
             return Problem(
                 title: localizer["UnexpectedServerError"].Value,
                 detail: localizer["UnexpectedErrorProcessingRequest"].Value,
@@ -134,6 +135,39 @@ public class DevicesController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Unexpected error while retrieving devices for field {FieldId}", fieldId);
+            return Problem(
+                title: localizer["UnexpectedServerError"].Value,
+                detail: localizer["UnexpectedErrorProcessingRequest"].Value,
+                statusCode: StatusCodes.Status500InternalServerError);
+        }
+    }
+    
+    [HttpGet("status/{status}")]
+    [SwaggerOperation(
+        Summary = "Gets devices by status",
+        Description = "Retrieves all devices with a specific status (ONLINE, OFFLINE, LOW_BATTERY)",
+        OperationId = "GetDevicesByStatus")]
+    [SwaggerResponse(200, "List of devices with the specified status", typeof(IEnumerable<DeviceResource>))]
+    [SwaggerResponse(400, "Invalid status value")]
+    public async Task<ActionResult<IEnumerable<DeviceResource>>> GetDevicesByStatus(
+        [FromRoute] string status,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var deviceStatus = DeviceStatus.Create(status);
+            var devices = await deviceQueryService.GetDevicesByStatusAsync(deviceStatus, cancellationToken);
+            var resources = devices.Select(DeviceResourceFromEntityAssembler.ToResourceFromEntity);
+            return Ok(resources);
+        }
+        catch (ArgumentException ex)
+        {
+            logger.LogWarning(ex, "Invalid status value: {Status}", status);
+            return BadRequest(new { error = localizer["InvalidDeviceStatus"].Value });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unexpected error while retrieving devices with status {Status}", status);
             return Problem(
                 title: localizer["UnexpectedServerError"].Value,
                 detail: localizer["UnexpectedErrorProcessingRequest"].Value,

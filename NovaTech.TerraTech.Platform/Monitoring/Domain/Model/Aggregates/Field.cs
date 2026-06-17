@@ -32,7 +32,6 @@ public partial class Field
     public SoilType SoilType { get; private set; }
     public LocationLatLong LocationLatLong { get; private set; }
     
-    // Método para actualizar (excepto ProfileId)
     public void Update(UpdateFieldCommand command)
     {
         Name = command.Name;

@@ -27,4 +27,11 @@ public class DeviceRepository(AppDbContext context) : BaseRepository<Device>(con
         return await Context.Set<Device>()
             .AnyAsync(d => d.MacAddress.Value == macAddress.Value, cancellationToken);
     }
+    
+    public async Task<IEnumerable<Device>> FindByStatusAsync(DeviceStatus status, CancellationToken cancellationToken = default)
+    {
+        return await Context.Set<Device>()
+            .Where(d => d.Status.Value == status.Value)
+            .ToListAsync(cancellationToken);
+    }
 }

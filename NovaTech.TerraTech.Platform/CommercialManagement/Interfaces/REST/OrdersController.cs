@@ -118,7 +118,7 @@ public class OrdersController(
         return Ok(resources);
     }
 
-    [HttpGet("profile/{profileId}")]
+    [HttpGet("~/api/v1/profiles/{profileId}/orders")]
     [SwaggerOperation(Summary = "Gets orders by profile")]
     [SwaggerResponse(200, "Orders retrieved", typeof(IEnumerable<OrderResource>))]
     public async Task<IActionResult> GetOrdersByProfile(string profileId, CancellationToken cancellationToken)

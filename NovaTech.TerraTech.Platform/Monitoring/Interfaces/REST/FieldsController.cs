@@ -111,7 +111,7 @@ public class FieldsController(
         }
     }
     
-    [HttpGet("soiltype/{soilType}")]
+    [HttpGet("~/api/v1/soil-types/{typeId}/fields")]
     [SwaggerOperation(
         Summary = "Gets fields by soil type",
         Description = "Retrieves all fields with a specific soil type",
@@ -119,25 +119,25 @@ public class FieldsController(
     [SwaggerResponse(200, "List of fields with the specified soil type", typeof(IEnumerable<FieldResource>))]
     [SwaggerResponse(400, "Invalid soil type value")]
     public async Task<ActionResult<IEnumerable<FieldResource>>> GetFieldsBySoilType(
-        [FromRoute] string soilType,
+        [FromRoute] string typeId,
         CancellationToken cancellationToken)
     {
         try
         {
             // Crear el value object SoilType (el constructor valida)
-            var soilTypeValue = new SoilType(soilType);
+            var soilTypeValue = new SoilType(typeId);
             var fields = await fieldQueryService.GetFieldsBySoilTypeAsync(soilTypeValue, cancellationToken);
             var resources = fields.Select(FieldResourceFromEntityAssembler.ToResourceFromEntity);
             return Ok(resources);
         }
         catch (ArgumentException ex)
         {
-            logger.LogWarning(ex, "Invalid soil type value: {SoilType}", soilType);
+            logger.LogWarning(ex, "Invalid soil type value: {SoilType}", typeId);
             return BadRequest(new { error = localizer["InvalidSoilType"].Value });
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unexpected error while retrieving fields with soil type {SoilType}", soilType);
+            logger.LogError(ex, "Unexpected error while retrieving fields with soil type {SoilType}", typeId);
             return Problem(
                 title: localizer["UnexpectedServerError"].Value,
                 detail: localizer["UnexpectedErrorProcessingRequest"].Value,

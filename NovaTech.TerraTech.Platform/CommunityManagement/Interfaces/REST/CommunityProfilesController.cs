@@ -75,7 +75,7 @@ public class CommunityProfilesController(
         return Ok(resource);
     }
 
-    [HttpGet("profile/{profileId}")]
+    [HttpGet("~/api/v1/profiles/{profileId}/community-profiles")]
     [SwaggerOperation(Summary = "Gets a profile by profile ID string")]
     [SwaggerResponse(200, "Profile found", typeof(CommunityProfileResource))]
     [SwaggerResponse(404, "Profile not found")]

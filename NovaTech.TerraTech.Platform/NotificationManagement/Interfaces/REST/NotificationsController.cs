@@ -53,16 +53,16 @@ public class NotificationsController(
         }
     }
 
-    [HttpPut("{id}/read")]
+    [HttpPut("{notificationId}/reads")]
     [SwaggerOperation(Summary = "Marks a notification as read")]
     [SwaggerResponse(200, "Notification marked as read")]
     [SwaggerResponse(404, "Notification not found")]
     [SwaggerResponse(500, "Unexpected error")]
-    public async Task<IActionResult> MarkAsRead(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> MarkAsRead(int notificationId, CancellationToken cancellationToken)
     {
         try
         {
-            var command = new MarkAsReadCommand(id);
+            var command = new MarkAsReadCommand(notificationId);
             var result = await notificationService.Handle(command, cancellationToken);
             
             if (result.IsSuccess)
@@ -75,7 +75,7 @@ public class NotificationsController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error marking notification {Id} as read", id);
+            logger.LogError(ex, "Error marking notification {Id} as read", notificationId);
             return Problem(title: "Unexpected server error", statusCode: 500);
         }
     }

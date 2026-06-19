@@ -111,7 +111,7 @@ public class DevicesController(
         }
     }
     
-    [HttpGet("field/{fieldId:int}")]
+    [HttpGet("~/api/v1/fields/{fieldId:int}/devices")]
     [SwaggerOperation(
         Summary = "Gets devices by field id",
         Description = "Retrieves all devices belonging to a specific field",
@@ -142,7 +142,7 @@ public class DevicesController(
         }
     }
     
-    [HttpGet("status/{status}")]
+    [HttpGet("~/api/v1/status/{status}/device")]
     [SwaggerOperation(
         Summary = "Gets devices by status",
         Description = "Retrieves all devices with a specific status (ONLINE, OFFLINE, LOW_BATTERY)",

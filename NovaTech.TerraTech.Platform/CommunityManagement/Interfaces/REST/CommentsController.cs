@@ -48,7 +48,7 @@ public class CommentsController(
         }
     }
 
-    [HttpGet("target/{targetProfileId}")]
+    [HttpGet("~/api/v1/community-profiles/{targetProfileId}/comments")]
     [SwaggerOperation(Summary = "Gets comments by target profile")]
     [SwaggerResponse(200, "Comments retrieved", typeof(IEnumerable<CommentResource>))]
     public async Task<IActionResult> GetCommentsByTargetProfileId(string targetProfileId, CancellationToken cancellationToken)

@@ -53,7 +53,7 @@ public class OrdersController(
         }
     }
 
-    [HttpPut("{id}/validate")]
+    [HttpPut("{id}/validates")]
     [SwaggerOperation(Summary = "Validates an order", Description = "Validates an order before payment")]
     [SwaggerResponse(200, "Order validated", typeof(OrderResource))]
     [SwaggerResponse(404, "Order not found", typeof(string))]

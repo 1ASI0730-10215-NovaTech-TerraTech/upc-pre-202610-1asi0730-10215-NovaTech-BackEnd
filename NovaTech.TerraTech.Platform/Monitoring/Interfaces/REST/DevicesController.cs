@@ -142,7 +142,7 @@ public class DevicesController(
         }
     }
     
-    [HttpGet("~/api/v1/status/{status}/device")]
+    [HttpGet("~/api/v1/status/{status}/devices")]
     [SwaggerOperation(
         Summary = "Gets devices by status",
         Description = "Retrieves all devices with a specific status (ONLINE, OFFLINE, LOW_BATTERY)",

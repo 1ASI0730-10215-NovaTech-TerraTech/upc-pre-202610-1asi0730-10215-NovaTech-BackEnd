@@ -8,7 +8,7 @@ namespace NovaTech.TerraTech.Platform.StockManagement.Infrastructure.Persistence
 
 public class InventoryRepository(AppDbContext context) : BaseRepository<Inventory>(context), IInventoryRepository
 {
-    public async Task<Inventory?> FindByProductIdAsync(string productId, CancellationToken cancellationToken = default)
+    public async Task<Inventory?> FindByProductIdAsync(int productId, CancellationToken cancellationToken = default)
     {
         return await Context.Set<Inventory>()
             .FirstOrDefaultAsync(i => i.ProductId == productId, cancellationToken);

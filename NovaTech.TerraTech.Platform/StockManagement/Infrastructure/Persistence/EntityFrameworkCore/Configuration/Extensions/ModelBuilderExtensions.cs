@@ -16,13 +16,16 @@ public static class ModelBuilderExtensions
 
             entity.Property(i => i.ProductId)
                 .IsRequired()
-                .HasMaxLength(255);
+                .HasColumnType("int");
 
             entity.Property(i => i.StockQuantity)
                 .IsRequired();
 
             entity.Property(i => i.WarehouseLocation)
                 .HasMaxLength(255);
+
+            entity.Property(i => i.CreatedAt);
+            entity.Property(i => i.UpdatedAt);
         });
     }
 }

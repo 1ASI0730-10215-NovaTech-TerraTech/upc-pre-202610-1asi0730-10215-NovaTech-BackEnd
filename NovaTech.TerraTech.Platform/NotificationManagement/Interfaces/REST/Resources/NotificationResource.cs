@@ -5,7 +5,7 @@ namespace NovaTech.TerraTech.Platform.NotificationManagement.Interfaces.REST.Res
 [SwaggerSchema(Description = "Notification resource")]
 public record NotificationResource(
     [SwaggerParameter(Description = "Notification identifier")] int Id,
-    [SwaggerParameter(Description = "Profile identifier")] string ProfileId,  // ← string
+    [SwaggerParameter(Description = "Profile identifier")] int ProfileId,
     [SwaggerParameter(Description = "Notification title")] string Title,
     [SwaggerParameter(Description = "Notification message")] string Message,
     [SwaggerParameter(Description = "Whether the notification has been read")] bool IsRead,

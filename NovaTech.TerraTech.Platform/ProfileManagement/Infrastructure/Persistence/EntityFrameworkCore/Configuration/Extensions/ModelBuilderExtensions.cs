@@ -13,7 +13,7 @@ public static class ModelBuilderExtensions
         builder.Entity<Profile>().Property(p => p.Id).IsRequired().ValueGeneratedOnAdd();
         
         
-        builder.Entity<Profile>().Property(p => p.UserId).IsRequired().HasMaxLength(50);
+        builder.Entity<Profile>().Property(p => p.UserId).IsRequired();
 
         builder.Entity<Profile>().OwnsOne(p => p.Name,
             n =>

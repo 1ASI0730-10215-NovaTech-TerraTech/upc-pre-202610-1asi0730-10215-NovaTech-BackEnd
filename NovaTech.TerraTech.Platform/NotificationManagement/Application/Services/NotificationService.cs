@@ -55,7 +55,6 @@ public class NotificationService(
         }
     }
 
-    // ✅ CORREGIDO - query.ProfileId es string, el repositorio acepta string
     public async Task<IEnumerable<Notification>> Handle(GetNotificationsByProfileQuery query, CancellationToken cancellationToken = default)
     {
         return await notificationRepository.FindByProfileIdAsync(query.ProfileId, cancellationToken);

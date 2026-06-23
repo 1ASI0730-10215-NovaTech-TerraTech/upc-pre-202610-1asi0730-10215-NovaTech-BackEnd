@@ -15,22 +15,16 @@ public class NotificationRepository : BaseRepository<Notification>, INotificatio
         _context = context;
     }
 
-    public async Task<IEnumerable<Notification>> FindByProfileIdAsync(string profileId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Notification>> FindByProfileIdAsync(int profileId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(profileId))
-            return new List<Notification>();
-
         return await _context.Set<Notification>()
             .Where(n => n.ProfileId == profileId)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<Notification>> FindUnreadByProfileIdAsync(string profileId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Notification>> FindUnreadByProfileIdAsync(int profileId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(profileId))
-            return new List<Notification>();
-
         return await _context.Set<Notification>()
             .Where(n => n.ProfileId == profileId && !n.IsRead)
             .OrderByDescending(n => n.CreatedAt)

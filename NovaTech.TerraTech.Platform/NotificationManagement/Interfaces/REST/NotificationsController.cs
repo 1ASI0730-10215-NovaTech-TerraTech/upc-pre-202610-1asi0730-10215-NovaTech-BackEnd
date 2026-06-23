@@ -94,18 +94,18 @@ public class NotificationsController(
     [SwaggerOperation(Summary = "Gets notifications", Description = "Gets all notifications or filtered by profile")]
     [SwaggerResponse(200, "Notifications retrieved", typeof(IEnumerable<NotificationResource>))]
     public async Task<IActionResult> GetNotificationsByProfile(
-        [FromQuery] string? profileId = null,
+        [FromQuery] int? profileId = null,  // Cambiado de string a int?
         CancellationToken cancellationToken = default)
     {
         IEnumerable<Notification> notifications;
         
-        if (string.IsNullOrEmpty(profileId))
+        if (!profileId.HasValue)
         {
             notifications = await notificationService.HandleGetAll(cancellationToken);
         }
         else
         {
-            var query = new GetNotificationsByProfileQuery(profileId);
+            var query = new GetNotificationsByProfileQuery(profileId.Value);
             notifications = await notificationService.Handle(query, cancellationToken);
         }
         

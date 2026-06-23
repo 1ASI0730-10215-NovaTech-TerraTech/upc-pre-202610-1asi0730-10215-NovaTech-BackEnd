@@ -11,5 +11,6 @@ public interface INotificationService
     Task<Result<Notification>> Handle(CreateNotificationCommand command, CancellationToken cancellationToken = default);
     Task<Result<bool>> Handle(MarkAsReadCommand command, CancellationToken cancellationToken = default);
     Task<IEnumerable<Notification>> Handle(GetNotificationsByProfileQuery query, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Notification>> HandleGetAll(CancellationToken cancellationToken = default);
     Task<Notification?> Handle(GetNotificationByIdQuery query, CancellationToken cancellationToken = default);
 }

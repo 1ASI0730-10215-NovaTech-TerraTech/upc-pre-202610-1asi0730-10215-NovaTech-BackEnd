@@ -16,7 +16,7 @@ public partial class Inventory
     }
 
     public int Id { get; private set; }
-    public string ProductId { get; private set; }
+    public int ProductId { get; private set; }
     public int StockQuantity { get; private set; }
     public string WarehouseLocation { get; private set; }
 

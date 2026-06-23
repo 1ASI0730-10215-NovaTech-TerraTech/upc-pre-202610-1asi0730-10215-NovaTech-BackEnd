@@ -5,7 +5,6 @@ namespace NovaTech.TerraTech.Platform.NotificationManagement.Domain.Repositories
 
 public interface INotificationRepository : IBaseRepository<Notification>
 {
-    // ✅ CORREGIDO - string en lugar de int (ProfileId es string)
     Task<IEnumerable<Notification>> FindByProfileIdAsync(string profileId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Notification>> FindUnreadByProfileIdAsync(string profileId, CancellationToken cancellationToken = default);
 }

@@ -14,13 +14,13 @@ public partial class Profile
 {
     public Profile()
     {
-        UserId = string.Empty;
+        UserId = 0;
         Name = new FundoName();
         Phone = new ContactPhone();
         Thresholds = new ProfileThresholds();
     }
     
-    public Profile(string userId, string fundoName, string contactPhone, double moistureThreshold, double tempThreshold)
+    public Profile(int userId, string fundoName, string contactPhone, double moistureThreshold, double tempThreshold)
     {
         UserId = userId;
         Name = new FundoName(fundoName);
@@ -44,7 +44,7 @@ public partial class Profile
         }
     
     public int Id { get; private set; }
-    public string UserId { get; private set; }
+    public int UserId { get; private set; }
     public FundoName Name { get; private set; }
     public ContactPhone Phone { get; private set; }
     public ProfileThresholds Thresholds { get; private set; }

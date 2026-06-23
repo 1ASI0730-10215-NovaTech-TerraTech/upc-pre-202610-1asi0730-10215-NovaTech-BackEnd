@@ -83,7 +83,7 @@ public class NotificationsController(
     [HttpGet]
     [SwaggerOperation(Summary = "Gets notifications by profile")]
     [SwaggerResponse(200, "Notifications retrieved", typeof(IEnumerable<NotificationResource>))]
-    public async Task<IActionResult> GetNotificationsByProfile([FromQuery] string profileId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetNotificationsByProfile([FromQuery] int profileId, CancellationToken cancellationToken)
     {
         var query = new GetNotificationsByProfileQuery(profileId);
         var notifications = await notificationService.Handle(query, cancellationToken);

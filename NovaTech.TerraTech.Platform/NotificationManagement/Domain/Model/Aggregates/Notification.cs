@@ -1,5 +1,4 @@
 using NovaTech.TerraTech.Platform.NotificationManagement.Domain.Model.Commands;
-using NovaTech.TerraTech.Platform.Shared.Domain.Model;
 
 namespace NovaTech.TerraTech.Platform.NotificationManagement.Domain.Model.Aggregates;
 
@@ -11,7 +10,7 @@ public partial class Notification
     {
         ArgumentNullException.ThrowIfNull(command);
         
-        ProfileId = command.ProfileId;
+        ProfileId = command.ProfileId;  // ← string
         Title = command.Title;
         Message = command.Message;
         IsRead = false;
@@ -19,7 +18,7 @@ public partial class Notification
     }
 
     public int Id { get; private set; }
-    public int ProfileId { get; private set; }
+    public string ProfileId { get; private set; }  // ← string
     public string Title { get; private set; }
     public string Message { get; private set; }
     public bool IsRead { get; private set; }

@@ -9,7 +9,7 @@ public static class NotificationResourceFromEntityAssembler
     {
         return new NotificationResource(
             entity.Id,
-            entity.ProfileId,
+            entity.ProfileId,  // ← string
             entity.Title,
             entity.Message,
             entity.IsRead,

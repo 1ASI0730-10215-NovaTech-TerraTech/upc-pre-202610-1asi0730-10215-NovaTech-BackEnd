@@ -6,11 +6,21 @@ using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFramew
 
 namespace NovaTech.TerraTech.Platform.NotificationManagement.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 
-public class NotificationRepository(AppDbContext context) : BaseRepository<Notification>(context), INotificationRepository
+public class NotificationRepository : BaseRepository<Notification>, INotificationRepository
 {
+    private readonly AppDbContext _context;
+
+    public NotificationRepository(AppDbContext context) : base(context)
+    {
+        _context = context;
+    }
+
     public async Task<IEnumerable<Notification>> FindByProfileIdAsync(string profileId, CancellationToken cancellationToken = default)
     {
-        return await Context.Set<Notification>()
+        if (string.IsNullOrEmpty(profileId))
+            return new List<Notification>();
+
+        return await _context.Set<Notification>()
             .Where(n => n.ProfileId == profileId)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync(cancellationToken);
@@ -18,7 +28,10 @@ public class NotificationRepository(AppDbContext context) : BaseRepository<Notif
 
     public async Task<IEnumerable<Notification>> FindUnreadByProfileIdAsync(string profileId, CancellationToken cancellationToken = default)
     {
-        return await Context.Set<Notification>()
+        if (string.IsNullOrEmpty(profileId))
+            return new List<Notification>();
+
+        return await _context.Set<Notification>()
             .Where(n => n.ProfileId == profileId && !n.IsRead)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync(cancellationToken);

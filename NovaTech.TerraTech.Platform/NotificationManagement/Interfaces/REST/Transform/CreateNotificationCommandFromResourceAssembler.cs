@@ -8,7 +8,7 @@ public static class CreateNotificationCommandFromResourceAssembler
     public static CreateNotificationCommand ToCommandFromResource(CreateNotificationResource resource)
     {
         return new CreateNotificationCommand(
-            resource.ProfileId,
+            resource.ProfileId,  // ← string
             resource.Title,
             resource.Message,
             resource.IsAlert

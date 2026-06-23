@@ -16,7 +16,7 @@ public static class ModelBuilderExtensions
 
             entity.Property(n => n.ProfileId)
                 .IsRequired()
-                .HasMaxLength(255);
+                .HasColumnType("int");
 
             entity.Property(n => n.Title)
                 .IsRequired()
@@ -31,6 +31,9 @@ public static class ModelBuilderExtensions
 
             entity.Property(n => n.IsAlert)
                 .IsRequired();
+
+            entity.Property(n => n.CreatedAt);
+            entity.Property(n => n.UpdatedAt);
         });
     }
 }

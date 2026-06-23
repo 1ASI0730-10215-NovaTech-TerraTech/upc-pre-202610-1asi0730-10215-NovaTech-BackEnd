@@ -5,7 +5,6 @@ using NovaTech.TerraTech.Platform.NotificationManagement.Domain.Model.Queries;
 using NovaTech.TerraTech.Platform.NotificationManagement.Domain.Repositories;
 using NovaTech.TerraTech.Platform.Shared.Application.Model;
 using NovaTech.TerraTech.Platform.Shared.Domain.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace NovaTech.TerraTech.Platform.NotificationManagement.Application.Services;
@@ -56,9 +55,15 @@ public class NotificationService(
         }
     }
 
+    // ✅ CORREGIDO - query.ProfileId es string, el repositorio acepta string
     public async Task<IEnumerable<Notification>> Handle(GetNotificationsByProfileQuery query, CancellationToken cancellationToken = default)
     {
         return await notificationRepository.FindByProfileIdAsync(query.ProfileId, cancellationToken);
+    }
+
+    public async Task<IEnumerable<Notification>> HandleGetAll(CancellationToken cancellationToken = default)
+    {
+        return await notificationRepository.ListAsync(cancellationToken);
     }
 
     public async Task<Notification?> Handle(GetNotificationByIdQuery query, CancellationToken cancellationToken = default)

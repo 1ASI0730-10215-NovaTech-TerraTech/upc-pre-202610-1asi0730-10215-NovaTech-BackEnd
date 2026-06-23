@@ -8,7 +8,7 @@ namespace NovaTech.TerraTech.Platform.NotificationManagement.Infrastructure.Pers
 
 public class NotificationRepository(AppDbContext context) : BaseRepository<Notification>(context), INotificationRepository
 {
-    public async Task<IEnumerable<Notification>> FindByProfileIdAsync(string profileId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Notification>> FindByProfileIdAsync(int profileId, CancellationToken cancellationToken = default)
     {
         return await Context.Set<Notification>()
             .Where(n => n.ProfileId == profileId)
@@ -16,7 +16,7 @@ public class NotificationRepository(AppDbContext context) : BaseRepository<Notif
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<Notification>> FindUnreadByProfileIdAsync(string profileId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Notification>> FindUnreadByProfileIdAsync(int profileId, CancellationToken cancellationToken = default)
     {
         return await Context.Set<Notification>()
             .Where(n => n.ProfileId == profileId && !n.IsRead)

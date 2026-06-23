@@ -31,19 +31,25 @@ public class NotificationsController(
             var command = CreateNotificationCommandFromResourceAssembler.ToCommandFromResource(resource);
             var result = await notificationService.Handle(command, cancellationToken);
             
-            if (result.IsSuccess)
+            if (result.IsSuccess && result.Value != null)
             {
                 return CreatedAtAction(nameof(GetNotificationById), new { id = result.Value.Id }, 
                     NotificationResourceFromEntityAssembler.ToResourceFromEntity(result.Value));
             }
             
-            return (NotificationError)result.Error switch
+            if (result.Error is NotificationError notificationError)
             {
-                NotificationError.InvalidTitle or NotificationError.InvalidMessage or NotificationError.InvalidProfileId 
-                    => BadRequest("Invalid notification request"),
-                _ => Problem(title: "Unexpected server error", 
-                    detail: "An unexpected error occurred while processing your request", statusCode: 500)
-            };
+                return notificationError switch
+                {
+                    NotificationError.InvalidTitle or NotificationError.InvalidMessage or NotificationError.InvalidProfileId 
+                        => BadRequest("Invalid notification request"),
+                    _ => Problem(title: "Unexpected server error", 
+                        detail: "An unexpected error occurred while processing your request", statusCode: 500)
+                };
+            }
+            
+            return Problem(title: "Unexpected server error", 
+                detail: "An unexpected error occurred while processing your request", statusCode: 500);
         }
         catch (Exception ex)
         {
@@ -70,8 +76,12 @@ public class NotificationsController(
                 return Ok(new { message = "Notification marked as read" });
             }
             
-            return (NotificationError)result.Error == NotificationError.NotFound ? NotFound() : 
-                Problem(title: "Unexpected server error", statusCode: 500);
+            if (result.Error is NotificationError notificationError && notificationError == NotificationError.NotFound)
+            {
+                return NotFound();
+            }
+            
+            return Problem(title: "Unexpected server error", statusCode: 500);
         }
         catch (Exception ex)
         {
@@ -81,17 +91,29 @@ public class NotificationsController(
     }
 
     [HttpGet]
-    [SwaggerOperation(Summary = "Gets notifications by profile")]
+    [SwaggerOperation(Summary = "Gets notifications", Description = "Gets all notifications or filtered by profile")]
     [SwaggerResponse(200, "Notifications retrieved", typeof(IEnumerable<NotificationResource>))]
-    public async Task<IActionResult> GetNotificationsByProfile([FromQuery] int profileId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetNotificationsByProfile(
+        [FromQuery] string? profileId = null,
+        CancellationToken cancellationToken = default)
     {
-        var query = new GetNotificationsByProfileQuery(profileId);
-        var notifications = await notificationService.Handle(query, cancellationToken);
+        IEnumerable<Notification> notifications;
+        
+        if (string.IsNullOrEmpty(profileId))
+        {
+            notifications = await notificationService.HandleGetAll(cancellationToken);
+        }
+        else
+        {
+            var query = new GetNotificationsByProfileQuery(profileId);
+            notifications = await notificationService.Handle(query, cancellationToken);
+        }
+        
         var resources = notifications.Select(NotificationResourceFromEntityAssembler.ToResourceFromEntity);
         return Ok(resources);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     [SwaggerOperation(Summary = "Gets a notification by id")]
     [SwaggerResponse(200, "Notification found", typeof(NotificationResource))]
     [SwaggerResponse(404, "Notification not found")]

@@ -23,7 +23,7 @@ public partial class Order
     }
 
     public int Id { get; private set; }
-    public string ProfileId { get; private set; }
+    public int ProfileId { get; private set; }
     public int ProductId { get; private set; }
     public string ProductName { get; private set; }
     public int Quantity { get; private set; }

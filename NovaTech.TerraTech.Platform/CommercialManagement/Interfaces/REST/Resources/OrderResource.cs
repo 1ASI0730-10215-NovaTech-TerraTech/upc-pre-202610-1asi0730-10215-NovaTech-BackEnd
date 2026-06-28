@@ -6,7 +6,7 @@ namespace NovaTech.TerraTech.Platform.CommercialManagement.Interfaces.REST.Resou
 [SwaggerSchema(Description = "Order resource")]
 public record OrderResource(
     [SwaggerParameter(Description = "Order identifier")] int Id,
-    [SwaggerParameter(Description = "Profile identifier")] string ProfileId,
+    [SwaggerParameter(Description = "Profile identifier")] int ProfileId,
     [SwaggerParameter(Description = "Product identifier")] int ProductId,
     [SwaggerParameter(Description = "Product name")] string ProductName,
     [SwaggerParameter(Description = "Quantity")] int Quantity,

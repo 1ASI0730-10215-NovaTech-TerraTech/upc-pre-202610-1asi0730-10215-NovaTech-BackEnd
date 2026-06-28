@@ -9,7 +9,7 @@ namespace NovaTech.TerraTech.Platform.CommercialManagement.Infrastructure.Persis
 
 public class OrderRepository(AppDbContext context) : BaseRepository<Order>(context), IOrderRepository
 {
-    public async Task<IEnumerable<Order>> FindByProfileIdAsync(string profileId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Order>> FindByProfileIdAsync(int profileId, CancellationToken cancellationToken = default)
     {
         return await Context.Set<Order>()
             .Where(o => o.ProfileId == profileId)

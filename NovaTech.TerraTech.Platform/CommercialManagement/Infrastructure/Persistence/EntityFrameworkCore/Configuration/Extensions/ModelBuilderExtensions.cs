@@ -16,8 +16,7 @@ public static class ModelBuilderExtensions
                 .ValueGeneratedOnAdd();
 
             entity.Property(o => o.ProfileId)
-                .IsRequired()
-                .HasMaxLength(255);
+                .IsRequired();
 
             entity.Property(o => o.ProductId)
                 .IsRequired();

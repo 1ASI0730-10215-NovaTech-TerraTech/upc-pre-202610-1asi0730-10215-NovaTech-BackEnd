@@ -6,6 +6,6 @@ namespace NovaTech.TerraTech.Platform.CommercialManagement.Domain.Repositories;
 
 public interface IOrderRepository : IBaseRepository<Order>
 {
-    Task<IEnumerable<Order>> FindByProfileIdAsync(string profileId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Order>> FindByProfileIdAsync(int profileId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Order>> FindByStatusAsync(OrderStatus status, CancellationToken cancellationToken = default);
 }

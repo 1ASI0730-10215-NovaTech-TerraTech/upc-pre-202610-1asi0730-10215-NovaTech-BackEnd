@@ -1,3 +1,3 @@
 namespace NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Queries;
 
-public record GetOrdersByProfileQuery(string ProfileId);
+public record GetOrdersByProfileQuery(int ProfileId);

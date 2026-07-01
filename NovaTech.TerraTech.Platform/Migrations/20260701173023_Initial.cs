@@ -100,7 +100,7 @@ namespace NovaTech.TerraTech.Platform.Migrations
                 {
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    product_id = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
+                    product_id = table.Column<int>(type: "int", nullable: false),
                     stock_quantity = table.Column<int>(type: "int", nullable: false),
                     warehouse_location = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "datetime", nullable: true),
@@ -118,7 +118,7 @@ namespace NovaTech.TerraTech.Platform.Migrations
                 {
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    profile_id = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
+                    profile_id = table.Column<int>(type: "int", nullable: false),
                     title = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
                     message = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: false),
                     is_read = table.Column<bool>(type: "tinyint(1)", nullable: false),
@@ -138,7 +138,7 @@ namespace NovaTech.TerraTech.Platform.Migrations
                 {
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    profile_id = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
+                    profile_id = table.Column<int>(type: "int", nullable: false),
                     product_id = table.Column<int>(type: "int", nullable: false),
                     product_name = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
                     quantity = table.Column<int>(type: "int", nullable: false),
@@ -181,7 +181,7 @@ namespace NovaTech.TerraTech.Platform.Migrations
                 {
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    user_id = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    user_id = table.Column<int>(type: "int", nullable: false),
                     fundo_name = table.Column<string>(type: "longtext", nullable: false),
                     contact_phone = table.Column<string>(type: "longtext", nullable: false),
                     moisture_threshold = table.Column<double>(type: "double", nullable: false),

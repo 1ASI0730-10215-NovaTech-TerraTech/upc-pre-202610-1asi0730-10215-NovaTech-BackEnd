@@ -69,10 +69,8 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .HasColumnType("varchar(255)")
                         .HasColumnName("product_name");
 
-                    b.Property<string>("ProfileId")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
+                    b.Property<int>("ProfileId")
+                        .HasColumnType("int")
                         .HasColumnName("profile_id");
 
                     b.Property<int>("Quantity")
@@ -312,10 +310,8 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .HasColumnType("varchar(1000)")
                         .HasColumnName("message");
 
-                    b.Property<string>("ProfileId")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
+                    b.Property<int>("ProfileId")
+                        .HasColumnType("int")
                         .HasColumnName("profile_id");
 
                     b.Property<string>("Title")
@@ -349,10 +345,8 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .HasColumnType("datetime")
                         .HasColumnName("updated_at");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
@@ -372,10 +366,8 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .HasColumnType("datetime")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("ProductId")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int")
                         .HasColumnName("product_id");
 
                     b.Property<int>("StockQuantity")

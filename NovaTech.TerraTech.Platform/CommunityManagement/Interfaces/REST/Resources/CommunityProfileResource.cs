@@ -6,7 +6,7 @@ namespace NovaTech.TerraTech.Platform.CommunityManagement.Interfaces.REST.Resour
 [SwaggerSchema(Description = "Community profile resource")]
 public record CommunityProfileResource(
     [SwaggerParameter(Description = "Profile database identifier")] int Id,
-    [SwaggerParameter(Description = "Profile identifier")] string ProfileId,
+    [SwaggerParameter(Description = "Profile identifier")] int ProfileId,
     [SwaggerParameter(Description = "Nickname")] string Nickname,
     [SwaggerParameter(Description = "Reputation score")] int ReputationScore,
     [SwaggerParameter(Description = "Public biography")] string PublicBio,

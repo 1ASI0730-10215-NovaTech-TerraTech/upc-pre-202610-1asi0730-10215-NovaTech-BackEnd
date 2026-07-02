@@ -21,8 +21,8 @@ namespace NovaTech.TerraTech.Platform.Migrations
                 {
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    author_profile_id = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
-                    target_profile_id = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    author_profile_id = table.Column<int>(type: "int", nullable: false),
+                    target_profile_id = table.Column<int>(type: "int", nullable: false),
                     content = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: false),
                     rating = table.Column<int>(type: "int", nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "datetime", nullable: true),
@@ -40,7 +40,7 @@ namespace NovaTech.TerraTech.Platform.Migrations
                 {
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    profile_id = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    profile_id = table.Column<int>(type: "int", nullable: false),
                     nickname = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
                     reputation_score = table.Column<int>(type: "int", nullable: false),
                     public_bio = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false),

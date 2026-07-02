@@ -1,8 +1,8 @@
 namespace NovaTech.TerraTech.Platform.CommunityManagement.Domain.Model.Commands;
 
 public record CreateCommentCommand(
-    string AuthorProfileId,
-    string TargetProfileId,
+    int AuthorProfileId,
+    int TargetProfileId,
     string Content,
     int Rating
 );

@@ -6,5 +6,5 @@ namespace NovaTech.TerraTech.Platform.CommunityManagement.Domain.Repositories;
 public interface ICommunityProfileRepository : IBaseRepository<CommunityProfile>
 {
     
-    Task<CommunityProfile?> FindByProfileIdAsync(string profileId, CancellationToken cancellationToken = default);
+    Task<CommunityProfile?> FindByProfileIdAsync(int profileId, CancellationToken cancellationToken = default);
 }

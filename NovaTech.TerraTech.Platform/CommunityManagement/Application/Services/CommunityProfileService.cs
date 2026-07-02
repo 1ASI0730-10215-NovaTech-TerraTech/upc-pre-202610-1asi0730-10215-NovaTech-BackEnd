@@ -59,7 +59,7 @@ public class CommunityProfileService(
             if (profile == null)
                 return Result<CommunityProfile>.Failure(CommunityError.NotFound, "The profile was not found");
 
-            profile.UpdateInformation(command.Nickname, command.PublicBio, command.VisibilityStatus);
+            profile.UpdateInformation(command.Nickname,command.ReputationScore, command.PublicBio, command.VisibilityStatus);
             
             profileRepository.Update(profile);
             await unitOfWork.CompleteAsync(cancellationToken);
@@ -68,7 +68,7 @@ public class CommunityProfileService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unexpected error updating community profile {ProfileId}", command.Id);
+            logger.LogError(ex, "Unexpected error updating community profile {Id}", command.Id);
             return Result<CommunityProfile>.Failure(CommunityError.DatabaseError, "An unexpected error occurred while updating the profile");
         }
     }

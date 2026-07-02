@@ -69,8 +69,7 @@ public class DevicesController(
     {
         try
         {
-            var devices = await deviceQueryService.GetAllDevicesAsync(cancellationToken);
-            var resources = devices.Select(DeviceResourceFromEntityAssembler.ToResourceFromEntity);
+            var resources = await deviceQueryService.GetAllDeviceResourcesAsync(cancellationToken);
             return Ok(resources);
         }
         catch (Exception ex)

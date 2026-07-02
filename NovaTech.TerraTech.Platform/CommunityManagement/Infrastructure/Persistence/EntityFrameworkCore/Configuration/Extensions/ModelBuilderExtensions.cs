@@ -11,7 +11,7 @@ public static class ModelBuilderExtensions
         builder.Entity<CommunityProfile>().ToTable("CommunityProfiles");
         builder.Entity<CommunityProfile>().HasKey(p => p.Id);
         builder.Entity<CommunityProfile>().Property(p => p.Id).IsRequired().ValueGeneratedOnAdd();
-        builder.Entity<CommunityProfile>().Property(p => p.ProfileId).IsRequired().HasMaxLength(50);
+        builder.Entity<CommunityProfile>().Property(p => p.ProfileId).IsRequired();
 
         
         builder.Entity<CommunityProfile>().OwnsOne(p => p.Nickname, n =>
@@ -41,8 +41,8 @@ public static class ModelBuilderExtensions
         builder.Entity<Comment>().ToTable("Comments");
         builder.Entity<Comment>().HasKey(c => c.Id);
         builder.Entity<Comment>().Property(c => c.Id).IsRequired().ValueGeneratedOnAdd();
-        builder.Entity<Comment>().Property(c => c.AuthorProfileId).IsRequired().HasMaxLength(50);
-        builder.Entity<Comment>().Property(c => c.TargetProfileId).IsRequired().HasMaxLength(50);
+        builder.Entity<Comment>().Property(c => c.AuthorProfileId).IsRequired();
+        builder.Entity<Comment>().Property(c => c.TargetProfileId).IsRequired();
         builder.Entity<Comment>().Property(c => c.Content).IsRequired().HasMaxLength(1000);
         builder.Entity<Comment>().Property(c => c.Rating).IsRequired();
     }

@@ -1,3 +1,3 @@
 namespace NovaTech.TerraTech.Platform.CommunityManagement.Domain.Model.Queries;
 
-public record GetCommentsByTargetProfileIdQuery(string TargetProfileId);
+public record GetCommentsByTargetProfileIdQuery(int TargetProfileId);

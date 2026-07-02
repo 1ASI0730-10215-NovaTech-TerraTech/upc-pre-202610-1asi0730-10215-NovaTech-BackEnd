@@ -150,10 +150,8 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .HasColumnType("int")
                         .HasColumnName("id");
 
-                    b.Property<string>("AuthorProfileId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                    b.Property<int>("AuthorProfileId")
+                        .HasColumnType("int")
                         .HasColumnName("author_profile_id");
 
                     b.Property<string>("Content")
@@ -170,10 +168,8 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .HasColumnType("int")
                         .HasColumnName("rating");
 
-                    b.Property<string>("TargetProfileId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                    b.Property<int>("TargetProfileId")
+                        .HasColumnType("int")
                         .HasColumnName("target_profile_id");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
@@ -197,10 +193,8 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .HasColumnType("datetime")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("ProfileId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                    b.Property<int>("ProfileId")
+                        .HasColumnType("int")
                         .HasColumnName("profile_id");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")

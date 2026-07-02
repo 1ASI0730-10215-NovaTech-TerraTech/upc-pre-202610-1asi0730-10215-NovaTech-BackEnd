@@ -69,8 +69,7 @@ public class FieldsController(
     {
         try
         {
-            var fields = await fieldQueryService.GetAllFieldsAsync(cancellationToken);
-            var resources = fields.Select(FieldResourceFromEntityAssembler.ToResourceFromEntity);
+            var resources = await fieldQueryService.GetAllFieldResourcesAsync(cancellationToken);
             return Ok(resources);
         }
         catch (Exception ex)
@@ -124,7 +123,6 @@ public class FieldsController(
     {
         try
         {
-            // Crear el value object SoilType (el constructor valida)
             var soilTypeValue = new SoilType(typeId);
             var fields = await fieldQueryService.GetFieldsBySoilTypeAsync(soilTypeValue, cancellationToken);
             var resources = fields.Select(FieldResourceFromEntityAssembler.ToResourceFromEntity);

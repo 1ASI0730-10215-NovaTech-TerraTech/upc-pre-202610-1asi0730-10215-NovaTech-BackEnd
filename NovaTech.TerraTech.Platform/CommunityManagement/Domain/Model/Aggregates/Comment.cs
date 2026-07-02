@@ -17,8 +17,8 @@ public partial class Comment
     }
 
     public int Id { get; private set; }
-    public string AuthorProfileId { get; private set; }
-    public string TargetProfileId { get; private set; }
+    public int AuthorProfileId { get; private set; }
+    public int TargetProfileId { get; private set; }
     public string Content { get; private set; }
     public int Rating { get; private set; }
     

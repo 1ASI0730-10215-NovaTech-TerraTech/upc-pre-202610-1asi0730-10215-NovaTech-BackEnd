@@ -11,7 +11,7 @@ public class CommentRepository(AppDbContext context) : BaseRepository<Comment>(c
 {
     
     
-    public async Task<IEnumerable<Comment>> FindByTargetProfileIdAsync(string targetProfileId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Comment>> FindByTargetProfileIdAsync(int targetProfileId, CancellationToken cancellationToken = default)
     {
         return await Context.Set<Comment>()
             .Where(c => c.TargetProfileId == targetProfileId)

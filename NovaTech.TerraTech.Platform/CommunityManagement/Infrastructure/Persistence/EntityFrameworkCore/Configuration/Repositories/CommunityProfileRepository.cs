@@ -13,7 +13,7 @@ public class CommunityProfileRepository(AppDbContext context) : BaseRepository<C
         return await Context.Set<CommunityProfile>().ToListAsync(cancellationToken);
     }
 
-    public async Task<CommunityProfile?> FindByProfileIdAsync(string profileId, CancellationToken cancellationToken)
+    public async Task<CommunityProfile?> FindByProfileIdAsync(int profileId, CancellationToken cancellationToken)
     {
         return await Context.Set<CommunityProfile>()
             .FirstOrDefaultAsync(p => p.ProfileId == profileId, cancellationToken);

@@ -6,7 +6,7 @@ namespace NovaTech.TerraTech.Platform.CommunityManagement.Interfaces.REST.Resour
 
 [SwaggerSchema(Description = "Request payload to create a community profile")]
 public record CreateCommunityProfileResource(
-    [Required] [SwaggerParameter(Description = "Profile identifier")] string ProfileId,
+    [Required] [SwaggerParameter(Description = "Profile identifier")] int ProfileId,
     [Required] [SwaggerParameter(Description = "Nickname")] string Nickname,
     [Required] [SwaggerParameter(Description = "Reputation score")] int ReputationScore,
     [Required] [SwaggerParameter(Description = "Public biography")] string PublicBio,

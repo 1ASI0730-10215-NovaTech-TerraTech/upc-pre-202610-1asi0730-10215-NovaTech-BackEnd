@@ -19,7 +19,7 @@ public partial class CommunityProfile
     }
 
     public int Id { get; private set; }
-    public string ProfileId { get; private set; }
+    public int ProfileId { get; private set; }
     
     public CommunityNickname Nickname { get; private set; }
     public Reputation ReputationScore { get; private set; }
@@ -28,9 +28,10 @@ public partial class CommunityProfile
     
     public VisibilityStatus VisibilityStatus { get; private set; }
     
-    public void UpdateInformation(string nickname, string publicBio, VisibilityStatus visibilityStatus)
+    public void UpdateInformation(string nickname, int reputationScore, string publicBio, VisibilityStatus visibilityStatus)
     {
         Nickname = new CommunityNickname(nickname);
+        ReputationScore = new Reputation(reputationScore);
         PublicBio = new PublicBio(publicBio);
         VisibilityStatus = visibilityStatus;
     }

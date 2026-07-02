@@ -6,5 +6,5 @@ namespace NovaTech.TerraTech.Platform.CommunityManagement.Domain.Repositories;
 
 public interface ICommentRepository : IBaseRepository<Comment>
 {
-    Task<IEnumerable<Comment>> FindByTargetProfileIdAsync(string targetProfileId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Comment>> FindByTargetProfileIdAsync(int targetProfileId, CancellationToken cancellationToken = default);
 }

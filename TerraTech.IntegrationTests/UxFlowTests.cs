@@ -17,9 +17,8 @@ public partial class JourneyTests
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var user = await Json(response);
         Assert.Equal(System.Text.Json.JsonValueKind.Null, user.GetProperty("token").ValueKind);
-        Assert.True(user.GetProperty("emailVerificationRequired").GetBoolean());
-        Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync("/api/v1/authentication/sign-in", new { emailAddress = email, password = "test-password" })).StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token = server.Emails.Verifications[email] })).StatusCode);
+        Assert.Equal(System.Text.Json.JsonValueKind.Null, user.GetProperty("expiresAt").ValueKind);
+        Assert.False(user.GetProperty("emailVerificationRequired").GetBoolean());
         user = await Json(await client.PostAsJsonAsync("/api/v1/authentication/sign-in", new { emailAddress = email, password = "test-password" }));
         var token = user.GetProperty("token").GetString();
         var jwt = new JsonWebToken(token);

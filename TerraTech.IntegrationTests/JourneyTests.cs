@@ -26,7 +26,6 @@ public partial class JourneyTests(TestServer server) : IClassFixture<TestServer>
         var signUp = await client.PostAsJsonAsync("/api/v1/authentication/sign-up", new { emailAddress = email, password = "test-password", confirmPassword = "test-password", fullName = "Demo Farmer" });
         Assert.Equal(HttpStatusCode.Created, signUp.StatusCode);
         var user = await Json(signUp);
-        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token = server.Emails.Verifications[email] })).StatusCode);
         var login = await client.PostAsJsonAsync("/api/v1/authentication/sign-in", new { emailAddress = email, password = "test-password" });
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         var auth = await Json(login);

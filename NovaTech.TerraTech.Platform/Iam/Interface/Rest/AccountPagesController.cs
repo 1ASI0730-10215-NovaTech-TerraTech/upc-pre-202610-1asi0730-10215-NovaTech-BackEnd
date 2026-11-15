@@ -5,8 +5,6 @@ namespace NovaTech.TerraTech.Platform.Iam.Interface.Rest;
 [ApiExplorerSettings(IgnoreApi = true), AllowAnonymous, Route("account")]
 public class AccountPagesController(IWebHostEnvironment environment) : ControllerBase
 {
-    [HttpGet("verify-email")]
-    public IActionResult Verification() => Asset("verify-email.html", "text/html; charset=utf-8");
     [HttpGet("reset-password")]
     public IActionResult PasswordReset() => Asset("reset-password.html", "text/html; charset=utf-8");
     [HttpGet("account.css")]

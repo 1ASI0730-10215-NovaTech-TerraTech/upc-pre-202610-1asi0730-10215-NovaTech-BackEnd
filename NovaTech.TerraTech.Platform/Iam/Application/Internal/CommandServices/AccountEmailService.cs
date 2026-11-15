@@ -18,30 +18,11 @@ public class AccountEmailService(
     IHashingService hashing,
     TimeProvider clock)
 {
-    public void EnsureConfigured() => sender.EnsureConfigured();
-
-    public async Task RequestVerification(string email, CancellationToken ct)
-    {
-        sender.EnsureConfigured();
-        var user = await FindUser(email, ct);
-        if (user is null || user.EmailVerifiedAtUtc is not null) return;
-        await Issue(user, AccountEmailPurpose.Verification, TimeSpan.FromHours(24), ct);
-    }
-
     public async Task RequestPasswordReset(string email, CancellationToken ct)
     {
         sender.EnsureConfigured();
         var user = await FindUser(email, ct);
         if (user is not null) await Issue(user, AccountEmailPurpose.PasswordReset, TimeSpan.FromHours(1), ct);
-    }
-
-    public async Task ConfirmVerification(string token, CancellationToken ct)
-    {
-        await using var transaction = await unitOfWork.BeginTransactionAsync(ct);
-        var userId = await Consume(token, AccountEmailPurpose.Verification, ct);
-        var now = clock.GetUtcNow().UtcDateTime;
-        await users.ConfirmEmailAsync(userId, now, ct);
-        await transaction.CommitAsync(ct);
     }
 
     public async Task ResetPassword(string token, string password, string confirmation, CancellationToken ct)
@@ -74,8 +55,7 @@ public class AccountEmailService(
         record.RequestedAtUtc = now;
         if (previous is null) await tokens.AddAsync(record, ct);
         await unitOfWork.CompleteAsync(ct);
-        if (purpose == AccountEmailPurpose.Verification) await sender.SendVerification(user.EmailAddress.Value, token, ct);
-        else await sender.SendPasswordReset(user.EmailAddress.Value, token, ct);
+        await sender.SendPasswordReset(user.EmailAddress.Value, token, ct);
         await transaction.CommitAsync(ct);
     }
 

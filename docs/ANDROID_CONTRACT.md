@@ -4,7 +4,7 @@ Base: `/api/v1`. JSON camelCase en los contratos nuevos. JWT en `Authorization: 
 
 | Paso | Endpoint | Resultado |
 |---|---|---|
-| Registro | `POST /authentication/sign-up` | 201 `{id,emailAddress,fullName,token:null,expiresAt:null,emailVerificationRequired:true}` |
+| Registro | `POST /authentication/sign-up` | 201 `{id,emailAddress,fullName,token:null,expiresAt:null,emailVerificationRequired:false}` |
 | Login | `POST /authentication/sign-in` | 200 `{id,emailAddress,token,fullName,expiresAt}` |
 | Cuenta | `GET /users/me` | Datos públicos de la cuenta propia |
 | Perfil | `GET /profiles/me` | 200 perfil propio; 404 si aún no se completó |
@@ -66,12 +66,12 @@ Sin verificación de correo ni recuperación de contraseña en TB1. Snapshot: `b
 
 ## Actualización de sesión y mapas
 
-Desde Sprint 2, las cuentas nuevas deben verificar su correo antes de obtener sesión. El login verificado emite un JWT de ocho horas; las cuentas históricas mantienen la exención acordada. `boundary` es opcional en las parcelas y contiene vértices `{latitude,longitude}`. El servidor calcula área y ubicación cuando se envía un contorno válido. Omitirlo en PUT lo preserva; `[]` lo elimina. Ver [UX_SESSION_MAP.md](UX_SESSION_MAP.md).
+Las cuentas nuevas no requieren verificación de correo y pueden iniciar sesión inmediatamente tras el registro (`emailVerificationRequired: false`, `token: null`). El login emite un JWT de ocho horas. `boundary` es opcional en las parcelas y contiene vértices `{latitude,longitude}`. El servidor calcula área y ubicación cuando se envía un contorno válido. Omitirlo en PUT lo preserva; `[]` lo elimina. Ver [UX_SESSION_MAP.md](UX_SESSION_MAP.md).
 
-## Sprint 2: verificación y recuperación
+## Recuperación de contraseña
 
-El registro nuevo requiere verificación de correo y no inicia sesión automáticamente. `EMAIL_NOT_VERIFIED` (403) permite reenviar el enlace desde Android. Los endpoints `POST /authentication/email-verifications` y `POST /authentication/password-reset-requests` reciben `{emailAddress}` y responden 202 con un mensaje genérico. `EMAIL_UNAVAILABLE` (503) indica indisponibilidad real; 429 requiere esperar.
+El registro se mantiene en el flujo registro → login sin emitir JWT automáticamente en el registro ni depender del servicio de correo. El endpoint `POST /authentication/password-reset-requests` recibe `{emailAddress}` y responde 202 con un mensaje genérico. `EMAIL_UNAVAILABLE` (503) indica indisponibilidad real; 429 requiere esperar.
 
-Los enlaces HTTPS abren las páginas `/account/verify-email` y `/account/reset-password`, que confirman mediante POST; los tokens no viajan en query strings. Verificación: 24 horas; recuperación: una hora. Son de un solo uso y se guardan como hash. Restablecer la contraseña invalida JWT anteriores. `/profiles/me` incorpora `registeredAt` nullable; no se inventan fechas faltantes.
+Los enlaces HTTPS abren la página `/account/reset-password`, que confirma mediante `POST /authentication/password-resets`; los tokens no viajan en query strings. La recuperación expira en una hora. Los tokens son de un solo uso y se guardan como hash. Restablecer la contraseña invalida JWT anteriores. `/profiles/me` incorpora `registeredAt` nullable; no se inventan fechas faltantes.
 
 El remitente temporal de pruebas Resend `onboarding@resend.dev` solo permite enviar al propietario de la cuenta. Cambiar a un remitente verificado para otros usuarios. Las claves quedan exclusivamente en configuración del backend.

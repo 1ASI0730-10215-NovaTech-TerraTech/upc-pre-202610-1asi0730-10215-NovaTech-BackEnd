@@ -40,8 +40,6 @@ using NovaTech.TerraTech.Platform.CommercialManagement.Domain.Repositories;
 using NovaTech.TerraTech.Platform.CommercialManagement.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 using NovaTech.TerraTech.Platform.Shared.Interfaces.Rest.ProblemDetails;
 using NovaTech.TerraTech.Platform.Iam.Application.Acl;
-using NovaTech.TerraTech.Platform.Iam.Application.CommandServices;
-using NovaTech.TerraTech.Platform.Iam.Application.Internal.CommandServices;
 using NovaTech.TerraTech.Platform.Iam.Application.Internal.OutboundServices;
 using NovaTech.TerraTech.Platform.Iam.Application.Internal.QueryServices;
 using NovaTech.TerraTech.Platform.Iam.Application.QueryServices;
@@ -351,7 +349,6 @@ builder.Services.Configure<TokenSettings>(
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAccountEmailTokenRepository, AccountEmailTokenRepository>();
-builder.Services.AddScoped<IUserCommandService, UserCommandService>();
 builder.Services.AddScoped<IUserQueryService, UserQueryService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IHashingService, HashingService>();

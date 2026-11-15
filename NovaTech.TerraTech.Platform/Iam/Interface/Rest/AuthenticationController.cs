@@ -15,10 +15,10 @@ public class AuthenticationController(AccountService accounts) : ControllerBase
     public async Task<IActionResult> SignUp(SignUpResource resource, CancellationToken ct)
     {
         var user = await accounts.Register(resource.FullName, resource.EmailAddress, resource.Password, resource.ConfirmPassword, ct);
-        return Created($"/api/v1/users/{user.Id}", new AuthenticatedUserResource(user.Id, user.EmailAddress.Value, null, user.FullName, null, true));
+        return Created($"/api/v1/users/{user.Id}", new AuthenticatedUserResource(user.Id, user.EmailAddress.Value, null, user.FullName, null, false));
     }
 
-    [HttpPost("sign-in"), ProducesResponseType<AuthenticatedUserResource>(200), ProducesResponseType(401), ProducesResponseType(403)]
+    [HttpPost("sign-in"), ProducesResponseType<AuthenticatedUserResource>(200), ProducesResponseType(401)]
     public async Task<IActionResult> SignIn(SignInResource resource, CancellationToken ct)
     {
         var (user, token) = await accounts.Login(resource.EmailAddress, resource.Password, ct);

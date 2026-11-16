@@ -345,4 +345,234 @@ public partial class JourneyTests
         await AssertProblem(await a.client.GetAsync($"/api/v1/devices/{int.MaxValue}/readings/{fresh.Id}"), HttpStatusCode.NotFound, "DEVICE_NOT_FOUND");
         await server.WithDb(async db => Assert.Equal(2, await db.Set<SensorReading>().IgnoreQueryFilters().CountAsync(x => x.DeviceId == device)));
     }
+
+    [Fact]
+    public async Task DirectDeviceRegistrationWorksWithoutCatalogAndValidatesSensorCodeAndMac()
+    {
+        var a = await Account();
+        var b = await Account();
+        var mac1 = "02:" + string.Join(":", Guid.NewGuid().ToByteArray().Take(5).Select(x => x.ToString("x2")));
+        var mac2 = "02:" + string.Join(":", Guid.NewGuid().ToByteArray().Take(5).Select(x => x.ToString("x2")));
+        var mac3 = "02:" + string.Join(":", Guid.NewGuid().ToByteArray().Take(5).Select(x => x.ToString("x2")));
+        var uncatalogedCode = "TT-" + Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+
+        var createdWithoutCode = await a.client.PostAsJsonAsync("/api/v1/devices", new
+        {
+            fieldId = a.fieldId,
+            macAddress = mac1.Replace(':', '-'),
+            status = "OFFLINE",
+            lastSync = DateTimeOffset.UtcNow
+        });
+        Assert.Equal(HttpStatusCode.Created, createdWithoutCode.StatusCode);
+        var d1 = await Json(createdWithoutCode);
+        Assert.Equal(mac1.ToUpperInvariant(), d1.GetProperty("macAddress").GetString());
+        Assert.Equal(JsonValueKind.Null, d1.GetProperty("sensorCode").ValueKind);
+
+        var createdWithUncatalogedCode = await a.client.PostAsJsonAsync("/api/v1/devices", new
+        {
+            fieldId = a.fieldId,
+            macAddress = mac2,
+            status = "ONLINE",
+            lastSync = DateTimeOffset.UtcNow,
+            sensorCode = uncatalogedCode,
+            name = "  Sensor Norte  "
+        });
+        Assert.Equal(HttpStatusCode.Created, createdWithUncatalogedCode.StatusCode);
+        var d2 = await Json(createdWithUncatalogedCode);
+        Assert.Equal(uncatalogedCode, d2.GetProperty("sensorCode").GetString());
+        Assert.Equal("Sensor Norte", d2.GetProperty("name").GetString());
+
+        await AssertProblem(await a.client.PostAsJsonAsync("/api/v1/devices", new
+        {
+            fieldId = a.fieldId,
+            macAddress = mac2.ToUpperInvariant(),
+            status = "ONLINE",
+            lastSync = DateTimeOffset.UtcNow
+        }), HttpStatusCode.Conflict, "DEVICE_ALREADY_REGISTERED");
+
+        await AssertProblem(await b.client.PostAsJsonAsync("/api/v1/devices", new
+        {
+            fieldId = b.fieldId,
+            macAddress = mac3,
+            status = "ONLINE",
+            lastSync = DateTimeOffset.UtcNow,
+            sensorCode = uncatalogedCode,
+            name = "Duplicate Code"
+        }), HttpStatusCode.Conflict, "SENSOR_OCCUPIED");
+
+        await AssertProblem(await a.client.PostAsJsonAsync("/api/v1/devices", new
+        {
+            fieldId = a.fieldId,
+            macAddress = mac3,
+            status = "ONLINE",
+            lastSync = DateTimeOffset.UtcNow,
+            sensorCode = "TT-123"
+        }), HttpStatusCode.BadRequest, "INVALID_SENSOR_CODE");
+
+        await AssertProblem(await a.client.PostAsJsonAsync("/api/v1/devices", new
+        {
+            fieldId = a.fieldId,
+            macAddress = "not-a-mac",
+            status = "ONLINE",
+            lastSync = DateTimeOffset.UtcNow
+        }), HttpStatusCode.BadRequest, "INVALID_MAC_ADDRESS");
+
+        await AssertProblem(await b.client.PostAsJsonAsync("/api/v1/devices", new
+        {
+            fieldId = a.fieldId,
+            macAddress = mac3,
+            status = "ONLINE",
+            lastSync = DateTimeOffset.UtcNow
+        }), HttpStatusCode.NotFound, "FIELD_NOT_FOUND");
+    }
+
+    [Fact]
+    public async Task SensorReadingPostPersistsManualReadingsEvaluatesAlertsAndPreventsOrphans()
+    {
+        var a = await Account();
+        var b = await Account();
+        var mappedFieldResponse = await a.client.PostAsJsonAsync("/api/v1/fields", MappedField(a.profileId, Rectangle()));
+        Assert.Equal(HttpStatusCode.Created, mappedFieldResponse.StatusCode);
+        var mappedFieldId = (await Json(mappedFieldResponse)).GetProperty("id").GetInt32();
+        var macA = "02:" + string.Join(":", Guid.NewGuid().ToByteArray().Take(5).Select(x => x.ToString("X2")));
+        var macB = "02:" + string.Join(":", Guid.NewGuid().ToByteArray().Take(5).Select(x => x.ToString("X2")));
+        var codeA = "TT-" + Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+        var codeB = "TT-" + Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+
+        var devAResponse = await a.client.PostAsJsonAsync("/api/v1/devices", new
+        {
+            fieldId = mappedFieldId,
+            macAddress = macA,
+            status = "ONLINE",
+            lastSync = DateTimeOffset.UtcNow,
+            sensorCode = codeA,
+            name = "Sensor A"
+        });
+        Assert.Equal(HttpStatusCode.Created, devAResponse.StatusCode);
+        var deviceA = (await Json(devAResponse)).GetProperty("id").GetInt32();
+
+        var devBResponse = await b.client.PostAsJsonAsync("/api/v1/devices", new
+        {
+            fieldId = b.fieldId,
+            macAddress = macB,
+            status = "ONLINE",
+            lastSync = DateTimeOffset.UtcNow,
+            sensorCode = codeB,
+            name = "Sensor B"
+        });
+        Assert.Equal(HttpStatusCode.Created, devBResponse.StatusCode);
+        var deviceB = (await Json(devBResponse)).GetProperty("id").GetInt32();
+
+        var zoneResponse = await a.client.PostAsJsonAsync($"/api/v1/fields/{mappedFieldId}/fertility-zones", new
+        {
+            deviceId = deviceA,
+            name = "Zona Norte",
+            boundary = new[]
+            {
+                new { latitude = -14.0002, longitude = -74.9998 },
+                new { latitude = -14.0002, longitude = -74.9992 },
+                new { latitude = -14.0008, longitude = -74.9992 },
+                new { latitude = -14.0008, longitude = -74.9998 }
+            }
+        });
+        Assert.Equal(HttpStatusCode.Created, zoneResponse.StatusCode);
+        await AssertProblem(await a.client.DeleteAsync($"/api/v1/devices/{deviceA}"), HttpStatusCode.Conflict, "DEPENDENT_RESOURCES");
+        await AssertProblem(await a.client.DeleteAsync($"/api/v1/fields/{mappedFieldId}"), HttpStatusCode.Conflict, "DEPENDENT_RESOURCES");
+
+        var frozen = new DateTimeOffset(2026, 11, 15, 18, 0, 0, TimeSpan.Zero);
+        server.Clock.Frozen = frozen;
+        try
+        {
+            var readingPost = await a.client.PostAsJsonAsync("/api/v1/sensor-readings", new
+            {
+                deviceId = deviceA,
+                moisturePercent = 15.0,
+                soilTemperatureC = 22.5,
+                nitrogenPpm = 30.0,
+                phosphorusPpm = 20.0,
+                potassiumPpm = 40.0
+            });
+            Assert.Equal(HttpStatusCode.Created, readingPost.StatusCode);
+            var createdReading = await Json(readingPost);
+            var readingId = createdReading.GetProperty("id").GetInt32();
+            Assert.Equal(deviceA, createdReading.GetProperty("deviceId").GetInt32());
+            Assert.Equal("MANUAL", createdReading.GetProperty("source").GetString());
+
+            await AssertProblem(await a.client.PostAsJsonAsync("/api/v1/sensor-readings", new
+            {
+                deviceId = deviceA,
+                moisturePercent = 40.0,
+                soilTemperatureC = 22.5,
+                nitrogenPpm = 30.0,
+                phosphorusPpm = 20.0,
+                potassiumPpm = 40.0
+            }), HttpStatusCode.Conflict, "READING_ALREADY_RECORDED");
+
+            var sameTimestampOtherDevice = await b.client.PostAsJsonAsync("/api/v1/sensor-readings", new
+            {
+                deviceId = deviceB,
+                moisturePercent = 50.0,
+                soilTemperatureC = 21.0,
+                nitrogenPpm = 25.0,
+                phosphorusPpm = 20.0,
+                potassiumPpm = 35.0
+            });
+            Assert.Equal(HttpStatusCode.Created, sameTimestampOtherDevice.StatusCode);
+
+            var latestA = await Json(await a.client.GetAsync($"/api/v1/devices/{deviceA}/readings/latest"));
+            Assert.Equal(readingId, latestA.GetProperty("reading").GetProperty("id").GetInt32());
+            Assert.Equal("MANUAL", latestA.GetProperty("reading").GetProperty("source").GetString());
+
+            var historyA = await Json(await a.client.GetAsync($"/api/v1/devices/{deviceA}/readings?days=7"));
+            var singleA = Assert.Single(historyA.GetProperty("readings").EnumerateArray());
+            Assert.Equal(readingId, singleA.GetProperty("id").GetInt32());
+
+            var detailA = await Json(await a.client.GetAsync($"/api/v1/devices/{deviceA}/readings/{readingId}"));
+            Assert.Equal(readingId, detailA.GetProperty("id").GetInt32());
+            Assert.Equal(15.0, detailA.GetProperty("moisturePercent").GetDouble());
+
+            var historyB = await Json(await b.client.GetAsync($"/api/v1/devices/{deviceB}/readings?days=7"));
+            var singleB = Assert.Single(historyB.GetProperty("readings").EnumerateArray());
+            Assert.Equal(deviceB, singleB.GetProperty("deviceId").GetInt32());
+
+            await AssertProblem(await a.client.PostAsJsonAsync("/api/v1/sensor-readings", new
+            {
+                deviceId = deviceB,
+                moisturePercent = 45.0,
+                soilTemperatureC = 20.0,
+                nitrogenPpm = 25.0,
+                phosphorusPpm = 20.0,
+                potassiumPpm = 35.0
+            }), HttpStatusCode.NotFound, "DEVICE_NOT_FOUND");
+
+            await AssertProblem(await a.client.PostAsJsonAsync("/api/v1/sensor-readings", new
+            {
+                deviceId = int.MaxValue,
+                moisturePercent = 45.0,
+                soilTemperatureC = 20.0,
+                nitrogenPpm = 25.0,
+                phosphorusPpm = 20.0,
+                potassiumPpm = 35.0
+            }), HttpStatusCode.NotFound, "DEVICE_NOT_FOUND");
+
+            await AssertProblem(await a.client.PostAsJsonAsync("/api/v1/sensor-readings", new
+            {
+                deviceId = deviceA,
+                moisturePercent = 120.0,
+                soilTemperatureC = 20.0,
+                nitrogenPpm = 25.0,
+                phosphorusPpm = 20.0,
+                potassiumPpm = 35.0
+            }), HttpStatusCode.BadRequest, "INVALID_READING");
+
+            var notificationsA = await Json(await a.client.GetAsync($"/api/v1/notifications?profileId={a.profileId}"));
+            Assert.Contains(notificationsA.EnumerateArray(), n => n.GetProperty("title").GetString()!.Contains("Zona Norte"));
+            var notificationsB = await Json(await b.client.GetAsync($"/api/v1/notifications?profileId={b.profileId}"));
+            Assert.Empty(notificationsB.EnumerateArray());
+        }
+        finally
+        {
+            server.Clock.Frozen = null;
+        }
+    }
 }

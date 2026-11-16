@@ -79,7 +79,42 @@ builder.Services.AddControllers(options =>
     options.Conventions.Add(new KebabCaseRouteNamingConvention());
     options.Filters.Add<OwnershipFilter>();
     options.Filters.Add<ProblemDetailsMediaTypeFilter>(int.MaxValue);
-}).AddDataAnnotationsLocalization();
+}).AddDataAnnotationsLocalization()
+.ConfigureApiBehaviorOptions(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var firstError = context.ModelState.Values
+            .SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage)
+            .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
+
+        var code = context.ModelState.Keys.Any(k => k.EndsWith("SensorCode", StringComparison.OrdinalIgnoreCase))
+            ? "INVALID_SENSOR_CODE"
+            : context.ModelState.Keys.Any(k => k.EndsWith("MacAddress", StringComparison.OrdinalIgnoreCase))
+                ? "INVALID_MAC_ADDRESS"
+                : context.ModelState.Keys.Any(k =>
+                    k.EndsWith("MoisturePercent", StringComparison.OrdinalIgnoreCase) ||
+                    k.EndsWith("SoilTemperatureC", StringComparison.OrdinalIgnoreCase) ||
+                    k.EndsWith("NitrogenPpm", StringComparison.OrdinalIgnoreCase) ||
+                    k.EndsWith("PhosphorusPpm", StringComparison.OrdinalIgnoreCase) ||
+                    k.EndsWith("PotassiumPpm", StringComparison.OrdinalIgnoreCase))
+                    ? "INVALID_READING"
+                    : "INVALID_INPUT";
+
+        var problem = new Microsoft.AspNetCore.Mvc.ValidationProblemDetails(context.ModelState)
+        {
+            Type = "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+            Title = !string.IsNullOrWhiteSpace(firstError) ? firstError : "One or more validation errors occurred.",
+            Status = StatusCodes.Status400BadRequest
+        };
+        problem.Extensions["code"] = code;
+        return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(problem)
+        {
+            ContentTypes = { "application/problem+json" }
+        };
+    };
+});
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();

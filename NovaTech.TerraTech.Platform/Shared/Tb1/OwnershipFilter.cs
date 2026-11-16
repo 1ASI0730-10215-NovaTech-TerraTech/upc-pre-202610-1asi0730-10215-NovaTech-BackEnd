@@ -36,7 +36,9 @@ public class OwnershipFilter(AppDbContext db) : IAsyncActionFilter, IAlwaysRunRe
             var found = key == "fieldId" ? await db.Set<Field>().AnyAsync(x => x.Id == id, ct) : key == "targetProfileId" && !write ? await db.Set<Profile>().IgnoreQueryFilters().AnyAsync(x => x.Id == id, ct) : await db.Set<Profile>().AnyAsync(x => x.Id == id, ct);
             if (!found)
             {
-                c.Result = ApiFailure.Result(404, "RESOURCE_NOT_FOUND", "Resource was not found.");
+                c.Result = key == "fieldId"
+                    ? ApiFailure.Result(404, "FIELD_NOT_FOUND", "Field was not found.")
+                    : ApiFailure.Result(404, "RESOURCE_NOT_FOUND", "Resource was not found.");
                 return;
             }
         }
@@ -72,7 +74,12 @@ public class OwnershipFilter(AppDbContext db) : IAsyncActionFilter, IAlwaysRunRe
                         _ => await db.Set<Profile>().AnyAsync(x => x.Id == id, ct)};
                     if (!found)
                     {
-                        c.Result = ApiFailure.Result(404, "RESOURCE_NOT_FOUND", "Resource was not found.");
+                        c.Result = key switch
+                        {
+                            "FieldId" => ApiFailure.Result(404, "FIELD_NOT_FOUND", "Field was not found."),
+                            "DeviceId" => ApiFailure.Result(404, "DEVICE_NOT_FOUND", "Device was not found."),
+                            _ => ApiFailure.Result(404, "RESOURCE_NOT_FOUND", "Resource was not found.")
+                        };
                         return;
                     }
                 }
@@ -97,7 +104,12 @@ public class OwnershipFilter(AppDbContext db) : IAsyncActionFilter, IAlwaysRunRe
                 };
                 if (!found)
                 {
-                    c.Result = ApiFailure.Result(404, "RESOURCE_NOT_FOUND", "Resource was not found.");
+                    c.Result = controller switch
+                    {
+                        "Fields" => ApiFailure.Result(404, "FIELD_NOT_FOUND", "Field was not found."),
+                        "Devices" or "SensorReadings" => ApiFailure.Result(404, "DEVICE_NOT_FOUND", "Device was not found."),
+                        _ => ApiFailure.Result(404, "RESOURCE_NOT_FOUND", "Resource was not found.")
+                    };
                     return;
                 }
 
@@ -105,8 +117,12 @@ public class OwnershipFilter(AppDbContext db) : IAsyncActionFilter, IAlwaysRunRe
                 {
                     bool dependencies = controller switch
                     {
-                        "Fields" => await db.Set<Device>().IgnoreQueryFilters().AnyAsync(x => x.FieldId.Value == id, ct),
-                        "Devices" => await db.Set<SensorReading>().IgnoreQueryFilters().AnyAsync(x => x.DeviceId == id, ct) || await db.Set<Report>().IgnoreQueryFilters().AnyAsync(x => x.DeviceId.Value == id, ct),
+                        "Fields" => await db.Set<Device>().IgnoreQueryFilters().AnyAsync(x => x.FieldId.Value == id, ct)
+                            || await db.Set<FertilityZone>().IgnoreQueryFilters().AnyAsync(x => x.FieldId == id, ct)
+                            || await db.Set<Report>().IgnoreQueryFilters().AnyAsync(x => x.FieldId == id, ct),
+                        "Devices" => await db.Set<SensorReading>().IgnoreQueryFilters().AnyAsync(x => x.DeviceId == id, ct)
+                            || await db.Set<Report>().IgnoreQueryFilters().AnyAsync(x => x.DeviceId.Value == id, ct)
+                            || await db.Set<FertilityZone>().IgnoreQueryFilters().AnyAsync(x => x.DeviceId == id, ct),
                         _ => false
                     };
                     if (dependencies)

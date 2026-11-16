@@ -39,7 +39,8 @@ public class SimulatedSensorReadingsController(
             resource.NitrogenPpm!.Value,
             resource.PhosphorusPpm!.Value,
             resource.PotassiumPpm!.Value,
-            ct
+            ct,
+            "SIMULATED"
         );
 
         var response = new ReadingResource(

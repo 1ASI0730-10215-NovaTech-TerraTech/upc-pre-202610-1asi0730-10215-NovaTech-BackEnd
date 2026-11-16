@@ -31,24 +31,26 @@ public partial class JourneyTests
     [Fact]
     public async Task VerificationExpiresAndResendingInvalidatesThePreviousLink()
     {
+        var account = await Account();
+        var me = await Json(await account.client.GetAsync("/api/v1/users/me"));
+        var email = me.GetProperty("emailAddress").GetString()!;
         var client = server.CreateClient();
-        var email = Guid.NewGuid() + "@test.example";
-        Assert.Equal(HttpStatusCode.Created, (await client.PostAsJsonAsync("/api/v1/authentication/sign-up", Registration(email))).StatusCode);
-        var first = server.Emails.Verifications[email];
+        Assert.Equal(HttpStatusCode.Accepted, (await client.PostAsJsonAsync("/api/v1/authentication/password-reset-requests", new { emailAddress = email })).StatusCode);
+        var first = server.Emails.Resets[email];
         await server.WithDb(async db =>
         {
-            var record = await db.Set<AccountEmailToken>().SingleAsync(t => t.TokenHash != "" && t.UserId == db.Set<User>().Where(u => u.EmailAddress.Value == email).Select(u => u.Id).Single());
+            var record = await db.Set<AccountEmailToken>().SingleAsync(t => t.TokenHash != "" && t.UserId == account.userId);
             record.ExpiresAtUtc = DateTime.UtcNow.AddSeconds(-1);
             record.RequestedAtUtc = DateTime.UtcNow.AddMinutes(-2);
             await db.SaveChangesAsync();
         });
-        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token = first })).StatusCode);
-        Assert.Equal(HttpStatusCode.Accepted, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications", new { emailAddress = email })).StatusCode);
-        var next = server.Emails.Verifications[email];
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/v1/authentication/password-resets", new { token = first, password = "new-test-password", confirmPassword = "new-test-password" })).StatusCode);
+        Assert.Equal(HttpStatusCode.Accepted, (await client.PostAsJsonAsync("/api/v1/authentication/password-reset-requests", new { emailAddress = email })).StatusCode);
+        var next = server.Emails.Resets[email];
         Assert.NotEqual(first, next);
-        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token = first })).StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token = next })).StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token = next })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/v1/authentication/password-resets", new { token = first, password = "new-test-password", confirmPassword = "new-test-password" })).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsJsonAsync("/api/v1/authentication/password-resets", new { token = next, password = "new-test-password", confirmPassword = "new-test-password" })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/v1/authentication/password-resets", new { token = next, password = "new-test-password", confirmPassword = "new-test-password" })).StatusCode);
     }
     [Fact]
     public async Task ResetRequestDoesNotRevealWhetherTheAccountExists()
@@ -70,11 +72,17 @@ public partial class JourneyTests
         server.Emails.Unavailable = true;
         try
         {
-            Assert.Equal(HttpStatusCode.ServiceUnavailable, (await client.PostAsJsonAsync("/api/v1/authentication/sign-up", Registration(email))).StatusCode);
-            await server.WithDb(async db => Assert.False(await db.Set<User>().AnyAsync(u => u.EmailAddress.Value == email)));
+            var signUp = await client.PostAsJsonAsync("/api/v1/authentication/sign-up", Registration(email));
+            Assert.Equal(HttpStatusCode.Created, signUp.StatusCode);
+            var signIn = await client.PostAsJsonAsync("/api/v1/authentication/sign-in", new { emailAddress = email, password = "test-password" });
+            Assert.Equal(HttpStatusCode.OK, signIn.StatusCode);
+            Assert.Equal(HttpStatusCode.ServiceUnavailable, (await client.PostAsJsonAsync("/api/v1/authentication/password-reset-requests", new { emailAddress = email })).StatusCode);
         }
         finally { server.Emails.Unavailable = false; }
-        foreach (var path in new[] { "verify-email", "reset-password", "account.css", "account.js" })
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/account/verify-email")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications", new { emailAddress = email })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token = new string('A', 43) })).StatusCode);
+        foreach (var path in new[] { "reset-password", "account.css", "account.js" })
         {
             var page = await client.GetAsync("/account/" + path);
             Assert.Equal(HttpStatusCode.OK, page.StatusCode);
@@ -92,7 +100,7 @@ public partial class JourneyTests
         var client = server.CreateClient();
         await client.PostAsJsonAsync("/api/v1/authentication/password-reset-requests", new { emailAddress = email });
         var token = server.Emails.Resets[email];
-        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token })).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/v1/authentication/password-resets", new { token, password = "replacement", confirmPassword = "different" })).StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsJsonAsync("/api/v1/authentication/password-resets", new { token, password = "replacement", confirmPassword = "replacement" })).StatusCode);
     }
@@ -122,9 +130,10 @@ public partial class JourneyTests
         var client = server.CreateClient();
         var email = Guid.NewGuid() + "@test.example";
         await client.PostAsJsonAsync("/api/v1/authentication/sign-up", Registration(email));
-        var token = server.Emails.Verifications[email];
-        Assert.Equal(HttpStatusCode.Accepted, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications", new { emailAddress = email })).StatusCode);
-        Assert.Equal(token, server.Emails.Verifications[email]);
+        Assert.Equal(HttpStatusCode.Accepted, (await client.PostAsJsonAsync("/api/v1/authentication/password-reset-requests", new { emailAddress = email })).StatusCode);
+        var token = server.Emails.Resets[email];
+        Assert.Equal(HttpStatusCode.Accepted, (await client.PostAsJsonAsync("/api/v1/authentication/password-reset-requests", new { emailAddress = email })).StatusCode);
+        Assert.Equal(token, server.Emails.Resets[email]);
     }
     [Fact]
     public async Task HistoricalAccountExemptionPreservesLoginAndExistingJwtClaims()
@@ -140,14 +149,5 @@ public partial class JourneyTests
         var me = await Json(await account.client.GetAsync("/api/v1/users/me"));
         var login = await server.CreateClient().PostAsJsonAsync("/api/v1/authentication/sign-in", new { emailAddress = me.GetProperty("emailAddress").GetString(), password = "test-password" });
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
-        var email = me.GetProperty("emailAddress").GetString()!;
-        var client = server.CreateClient();
-        Assert.Equal(HttpStatusCode.Accepted, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications", new { emailAddress = email })).StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token = server.Emails.Verifications[email] })).StatusCode);
-        await server.WithDb(async db => {
-            var user = await db.Set<User>().SingleAsync(u => u.Id == account.userId);
-            Assert.True(user.EmailVerificationExempt);
-            Assert.NotNull(user.EmailVerifiedAtUtc);
-        });
     }
 }

@@ -23,10 +23,6 @@ public class UserRepository(AppDbContext context) : BaseRepository<User>(context
         await Context.Set<User>().Where(user => user.Id == userId)
             .ExecuteUpdateAsync(update => update.SetProperty(user => user.TokenVersion, user => user.TokenVersion), cancellationToken);
 
-    public async Task ConfirmEmailAsync(int userId, DateTime verifiedAt, CancellationToken cancellationToken) =>
-        await Context.Set<User>().Where(user => user.Id == userId)
-            .ExecuteUpdateAsync(update => update.SetProperty(user => user.EmailVerifiedAtUtc, verifiedAt), cancellationToken);
-
     public async Task ResetPasswordAsync(int userId, string passwordHash, CancellationToken cancellationToken) =>
         await Context.Set<User>().Where(user => user.Id == userId)
             .ExecuteUpdateAsync(update => update.SetProperty(user => user.PasswordHash, passwordHash)

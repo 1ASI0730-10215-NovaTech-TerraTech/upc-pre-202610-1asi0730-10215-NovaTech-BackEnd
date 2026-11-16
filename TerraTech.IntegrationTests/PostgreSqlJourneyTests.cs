@@ -39,7 +39,6 @@ public class PostgreSqlJourneyTests
         var registration = new { fullName = "Postgres Farmer", emailAddress = email, password = "test-password", confirmPassword = "test-password" };
         Assert.Equal(HttpStatusCode.Created, (await client.PostAsJsonAsync("/api/v1/authentication/sign-up", registration)).StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, (await client.PostAsJsonAsync("/api/v1/authentication/sign-up", registration)).StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token = server.Emails.Verifications[email] })).StatusCode);
         var login = await client.PostAsJsonAsync("/api/v1/authentication/sign-in", new { emailAddress = email, password = "test-password" });
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         var auth = await login.Content.ReadFromJsonAsync<JsonElement>();
@@ -50,12 +49,28 @@ public class PostgreSqlJourneyTests
         var field = await client.PostAsJsonAsync("/api/v1/fields", new { profileId = profileData.GetProperty("id").GetInt32(), name = "North", sizeM2 = 5000, soilType = "SANDY", latitude = -12.0, longitude = -77.0, cropName = "Potato" });
         Assert.Equal(HttpStatusCode.Created, field.StatusCode);
         var fieldData = await field.Content.ReadFromJsonAsync<JsonElement>();
+        var fieldId = fieldData.GetProperty("id").GetInt32();
+
+        var directDevice = await client.PostAsJsonAsync("/api/v1/devices", new { fieldId, macAddress = "02-00-00-00-00-99", status = "ONLINE", lastSync = "2026-11-10T10:00:00Z", sensorCode = "TT-ABC123", name = "Direct Soil" });
+        Assert.Equal(HttpStatusCode.Created, directDevice.StatusCode);
+        var directDeviceData = await directDevice.Content.ReadFromJsonAsync<JsonElement>();
+        var directDeviceId = directDeviceData.GetProperty("id").GetInt32();
+        Assert.Equal("02:00:00:00:00:99", directDeviceData.GetProperty("macAddress").GetString());
+        Assert.Equal("TT-ABC123", directDeviceData.GetProperty("sensorCode").GetString());
+
+        var readingResponse = await client.PostAsJsonAsync("/api/v1/sensor-readings", new { deviceId = directDeviceId, moisturePercent = 42.5, soilTemperatureC = 21.0, nitrogenPpm = 30.0, phosphorusPpm = 18.0, potassiumPpm = 45.0 });
+        Assert.Equal(HttpStatusCode.Created, readingResponse.StatusCode);
+        var readingData = await readingResponse.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("MANUAL", readingData.GetProperty("source").GetString());
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync($"/api/v1/devices/{directDeviceId}/readings/latest")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync($"/api/v1/devices/{directDeviceId}/readings?days=7")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync($"/api/v1/devices/{directDeviceId}/readings/{readingData.GetProperty("id").GetInt32()}")).StatusCode);
 
         using var scope = server.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         db.Add(new SensorCatalogItem { SensorCode = "TT-000001", MacAddress = "02:00:00:00:00:01", IsDemo = true });
         await db.SaveChangesAsync();
-        var device = await client.PostAsJsonAsync("/api/v1/devices/register", new { sensorCode = "TT-000001", fieldId = fieldData.GetProperty("id").GetInt32(), name = "Soil", lastSync = "2026-11-10T10:00:00-05:00" });
+        var device = await client.PostAsJsonAsync("/api/v1/devices/register", new { sensorCode = "TT-000001", fieldId, name = "Soil", lastSync = "2026-11-10T10:00:00-05:00" });
         Assert.Equal(HttpStatusCode.Created, device.StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/v1/fields")).StatusCode);
         await db.Database.MigrateAsync();

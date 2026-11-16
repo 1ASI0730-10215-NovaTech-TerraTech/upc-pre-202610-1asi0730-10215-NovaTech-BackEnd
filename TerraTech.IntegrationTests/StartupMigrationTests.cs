@@ -19,7 +19,6 @@ public partial class JourneyTests
             Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/health/ready")).StatusCode);
             var response = await client.PostAsJsonAsync("/api/v1/authentication/sign-up", Registration("startup@test.example"));
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-            Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token = production.Emails.Verifications["startup@test.example"] })).StatusCode);
             id = (await Json(response)).GetProperty("id").GetInt32();
         }
 
@@ -46,6 +45,6 @@ public partial class JourneyTests
         await using var mysql = new MySqlConnection(connection.ConnectionString);
         await mysql.OpenAsync();
         var count = await new MySqlCommand("SELECT COUNT(*) FROM __EFMigrationsHistory", mysql).ExecuteScalarAsync();
-        Assert.Equal(11, Convert.ToInt32(count));
+        Assert.Equal(12, Convert.ToInt32(count));
     }
 }

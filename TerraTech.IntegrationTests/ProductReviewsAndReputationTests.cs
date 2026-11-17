@@ -136,6 +136,7 @@ public class ProductReviewsAndReputationTests
 
         public void SeedUser(int userId, string fullName) => _names[userId] = fullName;
 
+        public Task<int> CreateUser(string email, string password, CancellationToken cancellationToken) => Task.FromResult(0);
         public Task<int> FetchUserByEmail(string email, CancellationToken cancellationToken) => Task.FromResult(0);
         public Task<string> FetchEmailByUserId(int userId, CancellationToken cancellationToken) => Task.FromResult(string.Empty);
 

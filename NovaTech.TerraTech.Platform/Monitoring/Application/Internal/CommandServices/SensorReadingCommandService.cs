@@ -25,8 +25,7 @@ public class SensorReadingCommandService(
         double nitrogen,
         double phosphorus,
         double potassium,
-        CancellationToken ct,
-        string source = "MANUAL")
+        CancellationToken ct)
     {
         if (!double.IsFinite(moisture) ||
             moisture < 0 ||
@@ -63,10 +62,6 @@ public class SensorReadingCommandService(
             "Field was not found."
         );
 
-        var normalizedSource = string.IsNullOrWhiteSpace(source)
-            ? "MANUAL"
-            : source.Trim().ToUpperInvariant();
-
         var reading = new SensorReading
         {
             DeviceId = deviceId,
@@ -76,7 +71,7 @@ public class SensorReadingCommandService(
             NitrogenPpm = nitrogen,
             PhosphorusPpm = phosphorus,
             PotassiumPpm = potassium,
-            Source = normalizedSource
+            Source = "SIMULATED"
         };
 
         await readings.AddReadingAsync(reading, ct);
@@ -114,18 +109,7 @@ public class SensorReadingCommandService(
             );
         }
 
-        try
-        {
-            await unitOfWork.CompleteAsync(ct);
-        }
-        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex) when (DatabaseErrors.IsUniqueViolation(ex))
-        {
-            throw new ApiFailure(
-                409,
-                "READING_ALREADY_RECORDED",
-                "A sensor reading for this device and timestamp already exists."
-            );
-        }
+        await unitOfWork.CompleteAsync(ct);
 
         return reading;
     }

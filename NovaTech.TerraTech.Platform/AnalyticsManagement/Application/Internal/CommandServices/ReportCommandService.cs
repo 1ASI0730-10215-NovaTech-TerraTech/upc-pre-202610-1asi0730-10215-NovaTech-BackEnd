@@ -127,8 +127,6 @@ public class ReportCommandService(
     public async Task<Result<Report>> Handle(CreateReportCommand command, CancellationToken cancellationToken = default)
     {
         var deviceId = command.DeviceId;
-        if (deviceId.Value <= 0 || await deviceRepository.FindByIdAsync(deviceId.Value, cancellationToken)is null)
-            throw new ApiFailure(404, "DEVICE_NOT_FOUND", "Device was not found.");
         var generatedAt = command.GeneratedAt;
         var existing = await reportRepository.FindByDeviceIdAndGeneratedAtAsync(deviceId, generatedAt, cancellationToken);
         if (existing != null)

@@ -76,6 +76,8 @@ public static class ModelBuilderExtensions
                 .IsRequired()
                 .ValueGeneratedOnAdd();
 
+            device.Ignore(d => d.MacAddress);
+
             device.OwnsOne(d => d.FieldId, fieldId =>
             {
                 fieldId.WithOwner().HasForeignKey("Id");
@@ -141,12 +143,12 @@ public static class ModelBuilderExtensions
             zone.HasOne<Field>()
                 .WithMany()
                 .HasForeignKey(z => z.FieldId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             zone.HasOne<Device>()
                 .WithMany()
                 .HasForeignKey(z => z.DeviceId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             zone.HasIndex(z => z.FieldId);
             zone.HasIndex(z => z.DeviceId);

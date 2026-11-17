@@ -35,6 +35,7 @@ public static class OwnershipConfiguration
         b.Entity<SensorCatalogItem>().Property(x => x.SensorCode).HasMaxLength(9);
         b.Entity<SensorCatalogItem>().Property(x => x.MacAddress).HasMaxLength(17);
         b.Entity<SensorCatalogItem>().HasIndex(x => x.MacAddress).IsUnique();
+        b.Entity<Device>().HasOne<SensorCatalogItem>().WithMany().HasForeignKey(x => x.SensorCode).OnDelete(DeleteBehavior.Restrict);
         b.Entity<SensorReading>().HasKey(x => x.Id);
         b.Entity<SensorReading>().HasOne<Device>().WithMany().HasForeignKey(x => x.DeviceId).OnDelete(DeleteBehavior.Restrict);
         b.Entity<SensorReading>().HasIndex(x => new { x.DeviceId, x.RecordedAt }).IsUnique();

@@ -13,6 +13,108 @@
     "version": "v1"
   },
   "paths": {
+    "/api/v1/authentication/email-verifications": {
+      "post": {
+        "tags": [
+          "AccountEmail"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountEmailRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountEmailRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          },
+          "503": {
+            "description": "Service Unavailable"
+          },
+          "400": {
+            "description": "Invalid input. Problem Details."
+          },
+          "404": {
+            "description": "Resource missing or belongs to another account. NO_READINGS distinguishes an empty sensor."
+          },
+          "409": {
+            "description": "Duplicate, occupied sensor, or dependent resources. Problem Details."
+          }
+        },
+        "security": [ ]
+      }
+    },
+    "/api/v1/authentication/email-verifications/confirm": {
+      "post": {
+        "tags": [
+          "AccountEmail"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEmailResource"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEmailResource"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEmailResource"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource missing or belongs to another account. NO_READINGS distinguishes an empty sensor."
+          },
+          "409": {
+            "description": "Duplicate, occupied sensor, or dependent resources. Problem Details."
+          }
+        },
+        "security": [ ]
+      }
+    },
     "/api/v1/authentication/password-reset-requests": {
       "post": {
         "tags": [
@@ -39,24 +141,7 @@
         },
         "responses": {
           "202": {
-            "description": "Accepted",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccountEmailAcceptedResource"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccountEmailAcceptedResource"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccountEmailAcceptedResource"
-                }
-              }
-            }
+            "description": "Accepted"
           },
           "503": {
             "description": "Service Unavailable"
@@ -71,7 +156,7 @@
             "description": "Duplicate, occupied sensor, or dependent resources. Problem Details."
           }
         },
-        "security": []
+        "security": [ ]
       }
     },
     "/api/v1/authentication/password-resets": {
@@ -129,7 +214,7 @@
             "description": "Duplicate, occupied sensor, or dependent resources. Problem Details."
           }
         },
-        "security": []
+        "security": [ ]
       }
     },
     "/api/v1/reports": {
@@ -369,48 +454,6 @@
         }
       }
     },
-    "/api/v1/reports/fields/{fieldId}": {
-      "get": {
-        "tags": [
-          "Analytics"
-        ],
-        "summary": "Gets or generates a yield projection report for a field",
-        "description": "Calculates and persists a yield projection report for the specified field",
-        "operationId": "GetFieldProductionReport",
-        "parameters": [
-          {
-            "name": "fieldId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The field projection report was generated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProductionReportResource"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The field was not found"
-          },
-          "401": {
-            "description": "JWT missing, invalid, expired, or user no longer exists. Problem Details."
-          },
-          "400": {
-            "description": "Invalid input. Problem Details."
-          }
-        }
-      }
-    },
     "/api/v1/authentication/sign-up": {
       "post": {
         "tags": [
@@ -466,7 +509,7 @@
             "description": "Duplicate, occupied sensor, or dependent resources. Problem Details."
           }
         },
-        "security": []
+        "security": [ ]
       }
     },
     "/api/v1/authentication/sign-in": {
@@ -534,6 +577,26 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "400": {
             "description": "Invalid input. Problem Details."
           },
@@ -544,7 +607,7 @@
             "description": "Duplicate, occupied sensor, or dependent resources. Problem Details."
           }
         },
-        "security": []
+        "security": [ ]
       }
     },
     "/api/v1/orders": {
@@ -594,16 +657,6 @@
               }
             }
           },
-          "409": {
-            "description": "Insufficient stock",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "500": {
             "description": "Unexpected error",
             "content": {
@@ -619,6 +672,9 @@
           },
           "404": {
             "description": "Resource missing or belongs to another account. NO_READINGS distinguishes an empty sensor."
+          },
+          "409": {
+            "description": "Duplicate, occupied sensor, or dependent resources. Problem Details."
           }
         }
       },
@@ -762,16 +818,6 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid status transition",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
           "404": {
             "description": "Order not found",
             "content": {
@@ -794,6 +840,9 @@
           },
           "401": {
             "description": "JWT missing, invalid, expired, or user no longer exists. Problem Details."
+          },
+          "400": {
+            "description": "Invalid input. Problem Details."
           },
           "409": {
             "description": "Duplicate, occupied sensor, or dependent resources. Problem Details."
@@ -978,7 +1027,7 @@
             "description": "Resource missing or belongs to another account. NO_READINGS distinguishes an empty sensor."
           }
         },
-        "security": []
+        "security": [ ]
       }
     },
     "/api/v1/products/{id}": {
@@ -1016,7 +1065,7 @@
             "description": "Invalid input. Problem Details."
           }
         },
-        "security": []
+        "security": [ ]
       }
     },
     "/api/v1/comments": {
@@ -1126,7 +1175,7 @@
             "description": "Resource missing or belongs to another account. NO_READINGS distinguishes an empty sensor."
           }
         },
-        "security": []
+        "security": [ ]
       }
     },
     "/api/v1/comments/{id}": {
@@ -1164,7 +1213,7 @@
             "description": "Invalid input. Problem Details."
           }
         },
-        "security": []
+        "security": [ ]
       },
       "put": {
         "tags": [
@@ -1280,95 +1329,6 @@
         }
       }
     },
-    "/api/v1/products/{productId}/comments": {
-      "get": {
-        "tags": [
-          "Communities"
-        ],
-        "summary": "Gets comments for a product",
-        "description": "Returns comments ordered by creation date descending with optional rating filter",
-        "parameters": [
-          {
-            "name": "productId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "rating",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Comments retrieved",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CommentResource"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid rating filter"
-          },
-          "404": {
-            "description": "Product not found"
-          }
-        },
-        "security": []
-      }
-    },
-    "/api/v1/products/{productId}/ratings-summary": {
-      "get": {
-        "tags": [
-          "Communities"
-        ],
-        "summary": "Gets rating summary for a product",
-        "description": "Returns average rating, review count, and star rating breakdown",
-        "parameters": [
-          {
-            "name": "productId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Rating summary retrieved",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProductRatingSummaryResource"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Product not found"
-          },
-          "400": {
-            "description": "Invalid input. Problem Details."
-          }
-        },
-        "security": []
-      }
-    },
     "/api/v1/community-profiles": {
       "post": {
         "tags": [
@@ -1463,7 +1423,7 @@
             "description": "Resource missing or belongs to another account. NO_READINGS distinguishes an empty sensor."
           }
         },
-        "security": []
+        "security": [ ]
       }
     },
     "/api/v1/community-profiles/{profileId}": {
@@ -1501,7 +1461,7 @@
             "description": "Invalid input. Problem Details."
           }
         },
-        "security": []
+        "security": [ ]
       }
     },
     "/api/v1/community-profiles/{id}": {
@@ -1721,7 +1681,7 @@
           "Monitoring"
         ],
         "summary": "Creates a Device",
-        "description": "Registers a new IoT device associated with an owned field. Does not require prior provisioning in SensorCatalogItem. Supports an optional TT-XXXXXX sensor code and display name.",
+        "description": "Creates a new IoT device associated with a field",
         "operationId": "CreateDevice",
         "requestBody": {
           "content": {
@@ -1758,27 +1718,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "The specified field was not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
+                  "type": "string"
                 }
               }
             }
           },
           "409": {
-            "description": "A device with this MAC address or sensor code already exists",
+            "description": "A device with this MAC address already exists",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
+                  "type": "string"
                 }
               }
             }
@@ -1795,6 +1745,9 @@
           },
           "401": {
             "description": "JWT missing, invalid, expired, or user no longer exists. Problem Details."
+          },
+          "404": {
+            "description": "Resource missing or belongs to another account. NO_READINGS distinguishes an empty sensor."
           }
         }
       },
@@ -1831,81 +1784,6 @@
         }
       }
     },
-    "/api/v1/devices/register": {
-      "post": {
-        "tags": [
-          "Monitoring"
-        ],
-        "summary": "Associate a provisioned sensor (Legacy / Deprecated)",
-        "description": "Deprecated compatibility endpoint retained for legacy Android clients. TT-XXXXXX must already exist in the provisioned catalog and be available to resolve its hardware MAC address. New integrations should use POST /api/v1/devices.",
-        "operationId": "RegisterProvisionedDevice",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterSensorResource"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterSensorResource"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterSensorResource"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DeviceResource"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "JWT missing, invalid, expired, or user no longer exists. Problem Details."
-          }
-        },
-        "deprecated": true
-      }
-    },
     "/api/v1/devices/{id}": {
       "get": {
         "tags": [
@@ -1937,14 +1815,7 @@
             }
           },
           "404": {
-            "description": "The device was not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
+            "description": "The device was not found"
           },
           "401": {
             "description": "JWT missing, invalid, expired, or user no longer exists. Problem Details."
@@ -2007,7 +1878,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
+                  "type": "string"
                 }
               }
             }
@@ -2017,7 +1888,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
+                  "type": "string"
                 }
               }
             }
@@ -2027,7 +1898,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
+                  "type": "string"
                 }
               }
             }
@@ -2074,17 +1945,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Device has dependent resources",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
+                  "type": "string"
                 }
               }
             }
@@ -2104,6 +1965,9 @@
           },
           "400": {
             "description": "Invalid input. Problem Details."
+          },
+          "409": {
+            "description": "Duplicate, occupied sensor, or dependent resources. Problem Details."
           }
         }
       }
@@ -2142,14 +2006,7 @@
             }
           },
           "404": {
-            "description": "Field not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
+            "description": "Field not found"
           },
           "401": {
             "description": "JWT missing, invalid, expired, or user no longer exists. Problem Details."
@@ -2193,14 +2050,7 @@
             }
           },
           "400": {
-            "description": "Invalid status value",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
+            "description": "Invalid status value"
           },
           "401": {
             "description": "JWT missing, invalid, expired, or user no longer exists. Problem Details."
@@ -3644,29 +3494,28 @@
         }
       }
     },
-    "/api/v1/sensor-readings": {
+    "/api/v1/devices/register": {
       "post": {
         "tags": [
           "SensorReadings"
         ],
-        "summary": "Register a sensor reading",
-        "description": "Registers a sensor reading for an existing device owned by the authenticated user with Source = MANUAL and evaluates fertility zone alert thresholds.",
-        "operationId": "CreateSensorReading",
+        "summary": "Associate a provisioned sensor",
+        "description": "TT-XXXXXX must already exist in the catalog and be available. Own field required. Concurrent association is prevented by a unique database index.",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateSensorReadingResource"
+                "$ref": "#/components/schemas/RegisterSensorResource"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateSensorReadingResource"
+                "$ref": "#/components/schemas/RegisterSensorResource"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateSensorReadingResource"
+                "$ref": "#/components/schemas/RegisterSensorResource"
               }
             }
           }
@@ -3677,83 +3526,32 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReadingResource"
+                  "$ref": "#/components/schemas/DeviceResource"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReadingResource"
+                  "$ref": "#/components/schemas/DeviceResource"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReadingResource"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
+                  "$ref": "#/components/schemas/DeviceResource"
                 }
               }
             }
           },
           "401": {
             "description": "JWT missing, invalid, expired, or user no longer exists. Problem Details."
+          },
+          "400": {
+            "description": "Invalid input. Problem Details."
+          },
+          "404": {
+            "description": "Resource missing or belongs to another account. NO_READINGS distinguishes an empty sensor."
+          },
+          "409": {
+            "description": "Duplicate, occupied sensor, or dependent resources. Problem Details."
           }
         }
       }
@@ -3797,31 +3595,14 @@
               }
             }
           },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "401": {
             "description": "JWT missing, invalid, expired, or user no longer exists. Problem Details."
           },
           "400": {
             "description": "Invalid input. Problem Details."
+          },
+          "404": {
+            "description": "Resource missing or belongs to another account. NO_READINGS distinguishes an empty sensor."
           }
         }
       }
@@ -3874,48 +3655,14 @@
               }
             }
           },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "401": {
             "description": "JWT missing, invalid, expired, or user no longer exists. Problem Details."
+          },
+          "400": {
+            "description": "Invalid input. Problem Details."
+          },
+          "404": {
+            "description": "Resource missing or belongs to another account. NO_READINGS distinguishes an empty sensor."
           }
         }
       }
@@ -3968,31 +3715,14 @@
               }
             }
           },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "401": {
             "description": "JWT missing, invalid, expired, or user no longer exists. Problem Details."
           },
           "400": {
             "description": "Invalid input. Problem Details."
+          },
+          "404": {
+            "description": "Resource missing or belongs to another account. NO_READINGS distinguishes an empty sensor."
           }
         }
       }
@@ -4354,16 +4084,6 @@
   },
   "components": {
     "schemas": {
-      "AccountEmailAcceptedResource": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
       "AccountEmailRequest": {
         "required": [
           "emailAddress"
@@ -4407,25 +4127,6 @@
         },
         "additionalProperties": false
       },
-      "CalculationDetailsResource": {
-        "type": "object",
-        "properties": {
-          "historicalTotalKg": {
-            "type": "number",
-            "format": "double"
-          },
-          "environmentalFactor": {
-            "type": "number",
-            "format": "double"
-          },
-          "factorReason": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false,
-        "description": "Details of the yield projection calculation"
-      },
       "CombinedRecommendationResource": {
         "type": "object",
         "properties": {
@@ -4450,11 +4151,7 @@
             "type": "integer",
             "format": "int32"
           },
-          "userId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "productId": {
+          "authorProfileId": {
             "type": "integer",
             "format": "int32"
           },
@@ -4473,10 +4170,6 @@
           "createdAt": {
             "type": "string",
             "format": "date-time",
-            "nullable": true
-          },
-          "authorName": {
-            "type": "string",
             "nullable": true
           }
         },
@@ -4513,21 +4206,29 @@
         "additionalProperties": false,
         "description": "Community profile resource"
       },
-      "CreateCommentResource": {
+      "ConfirmEmailResource": {
         "required": [
-          "content",
-          "productId",
-          "rating",
-          "targetProfileId",
-          "userId"
+          "token"
         ],
         "type": "object",
         "properties": {
-          "userId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "productId": {
+          "token": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateCommentResource": {
+        "required": [
+          "authorProfileId",
+          "content",
+          "rating",
+          "targetProfileId"
+        ],
+        "type": "object",
+        "properties": {
+          "authorProfileId": {
             "type": "integer",
             "format": "int32"
           },
@@ -4604,14 +4305,6 @@
           "lastSync": {
             "type": "string",
             "format": "date-time"
-          },
-          "sensorCode": {
-            "type": "string",
-            "nullable": true
-          },
-          "name": {
-            "type": "string",
-            "nullable": true
           }
         },
         "additionalProperties": false,
@@ -4694,46 +4387,20 @@
       },
       "CreateInventoryResource": {
         "required": [
-          "averageWeightPerUnitKg",
-          "fieldId",
-          "imageUrl",
-          "name",
-          "price",
-          "profileId",
-          "quantity",
-          "unitType"
+          "productId",
+          "stockQuantity"
         ],
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "fieldId": {
+          "productId": {
             "type": "integer",
             "format": "int32"
           },
-          "profileId": {
+          "stockQuantity": {
             "type": "integer",
             "format": "int32"
           },
-          "quantity": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "unitType": {
-            "type": "string",
-            "nullable": true
-          },
-          "averageWeightPerUnitKg": {
-            "type": "number",
-            "format": "double"
-          },
-          "price": {
-            "type": "number",
-            "format": "double"
-          },
-          "imageUrl": {
+          "warehouseLocation": {
             "type": "string",
             "nullable": true
           }
@@ -4772,12 +4439,12 @@
         "required": [
           "paymentMethod",
           "productId",
-          "quantity",
-          "userId"
+          "profileId",
+          "quantity"
         ],
         "type": "object",
         "properties": {
-          "userId": {
+          "profileId": {
             "type": "integer",
             "format": "int32"
           },
@@ -4801,7 +4468,6 @@
       },
       "CreateProductResource": {
         "required": [
-          "imageUrl",
           "name",
           "price",
           "type"
@@ -4904,50 +4570,6 @@
         },
         "additionalProperties": false,
         "description": "Request payload to create a Report"
-      },
-      "CreateSensorReadingResource": {
-        "required": [
-          "deviceId",
-          "moisturePercent",
-          "nitrogenPpm",
-          "phosphorusPpm",
-          "potassiumPpm",
-          "soilTemperatureC"
-        ],
-        "type": "object",
-        "properties": {
-          "deviceId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "moisturePercent": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "soilTemperatureC": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "nitrogenPpm": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "phosphorusPpm": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "potassiumPpm": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false,
-        "description": "Request payload to register a sensor reading"
       },
       "DeviceResource": {
         "type": "object",
@@ -5168,37 +4790,13 @@
             "type": "integer",
             "format": "int32"
           },
-          "fieldId": {
+          "stockQuantity": {
             "type": "integer",
             "format": "int32"
           },
-          "profileId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "name": {
+          "warehouseLocation": {
             "type": "string",
             "nullable": true
-          },
-          "quantity": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "unitType": {
-            "type": "string",
-            "nullable": true
-          },
-          "averageWeightPerUnitKg": {
-            "type": "number",
-            "format": "double"
-          },
-          "totalWeightKg": {
-            "type": "number",
-            "format": "double"
-          },
-          "price": {
-            "type": "number",
-            "format": "double"
           },
           "createdAt": {
             "type": "string",
@@ -5314,7 +4912,7 @@
             "type": "integer",
             "format": "int32"
           },
-          "userId": {
+          "profileId": {
             "type": "integer",
             "format": "int32"
           },
@@ -5397,29 +4995,7 @@
             "nullable": true
           }
         },
-        "additionalProperties": {}
-      },
-      "ProductRatingSummaryResource": {
-        "type": "object",
-        "properties": {
-          "productId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "averageRating": {
-            "type": "number",
-            "format": "double"
-          },
-          "totalReviews": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "ratingBreakdown": {
-            "$ref": "#/components/schemas/RatingBreakdownResource"
-          }
-        },
-        "additionalProperties": false,
-        "description": "Product rating summary resource"
+        "additionalProperties": { }
       },
       "ProductResource": {
         "type": "object",
@@ -5451,44 +5027,6 @@
         },
         "additionalProperties": false,
         "description": "Product resource"
-      },
-      "ProductionReportResource": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "fieldId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "cropName": {
-            "type": "string",
-            "nullable": true
-          },
-          "historicalKg": {
-            "type": "number",
-            "format": "double"
-          },
-          "projectedYieldKg": {
-            "type": "number",
-            "format": "double"
-          },
-          "confidenceScore": {
-            "type": "number",
-            "format": "double"
-          },
-          "calculationDetails": {
-            "$ref": "#/components/schemas/CalculationDetailsResource"
-          },
-          "generatedAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "additionalProperties": false,
-        "description": "Agricultural yield projection report resource"
       },
       "ProfileResource": {
         "type": "object",
@@ -5529,33 +5067,6 @@
         },
         "additionalProperties": false,
         "description": "Profile resource"
-      },
-      "RatingBreakdownResource": {
-        "type": "object",
-        "properties": {
-          "oneStar": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "twoStars": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "threeStars": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "fourStars": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "fiveStars": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false,
-        "description": "Rating breakdown by stars"
       },
       "ReadingHistoryResource": {
         "type": "object",
@@ -6185,7 +5696,7 @@
   },
   "security": [
     {
-      "Bearer": []
+      "Bearer": [ ]
     }
   ],
   "tags": [

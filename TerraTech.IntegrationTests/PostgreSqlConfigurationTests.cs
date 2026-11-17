@@ -46,7 +46,7 @@ public class PostgreSqlConfigurationTests
         var options = new DbContextOptionsBuilder<PostgreSqlAppDbContext>()
             .UseNpgsql("Host=localhost;Database=terratech_design;Username=design");
         using var db = new PostgreSqlAppDbContext(options.Options);
-        Assert.Equal(2, db.Database.GetMigrations().Count());
+        Assert.Single(db.Database.GetMigrations());
         var sql = db.Database.GenerateCreateScript();
         Assert.Contains("terratech.users", sql);
         Assert.DoesNotContain("longtext", sql);

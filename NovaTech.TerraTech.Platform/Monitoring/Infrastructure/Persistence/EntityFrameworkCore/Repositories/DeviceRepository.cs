@@ -15,19 +15,12 @@ public class DeviceRepository(AppDbContext context) : BaseRepository<Device>(con
 
     public async Task<Device?> FindByMacAddressAsync(MacAddress macAddress, CancellationToken cancellationToken = default)
     {
-        var normalized = macAddress.Value.Trim().Replace("-", ":").ToUpper();
-        return await Context.Set<Device>().IgnoreQueryFilters().FirstOrDefaultAsync(d => d.MacAddress.Value.Replace("-", ":").ToUpper() == normalized, cancellationToken);
+        return await Context.Set<Device>().FirstOrDefaultAsync(d => d.MacAddress.Value == macAddress.Value, cancellationToken);
     }
 
     public async Task<bool> ExistsByMacAddressAsync(MacAddress macAddress, CancellationToken cancellationToken = default)
     {
-        var normalized = macAddress.Value.Trim().Replace("-", ":").ToUpper();
-        return await Context.Set<Device>().IgnoreQueryFilters().AnyAsync(d => d.MacAddress.Value.Replace("-", ":").ToUpper() == normalized, cancellationToken);
-    }
-
-    public async Task<bool> ExistsBySensorCodeAsync(string sensorCode, CancellationToken cancellationToken = default)
-    {
-        return await Context.Set<Device>().IgnoreQueryFilters().AnyAsync(d => d.SensorCode == sensorCode, cancellationToken);
+        return await Context.Set<Device>().AnyAsync(d => d.MacAddress.Value == macAddress.Value, cancellationToken);
     }
 
     public async Task<IEnumerable<Device>> FindByStatusAsync(DeviceStatus status, CancellationToken cancellationToken = default)

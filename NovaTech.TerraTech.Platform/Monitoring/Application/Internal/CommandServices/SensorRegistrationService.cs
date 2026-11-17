@@ -17,10 +17,10 @@ public class SensorRegistrationService(ISensorDataRepository sensors, IFieldRepo
         var sensor = await sensors.FindSensor(code, normalizedMac, ct);
         if (sensor is null)
             throw new ApiFailure(400, "UNKNOWN_SENSOR", "Sensor must exist in the provisioned catalog.");
-        var catalogMac = new MacAddress(sensor.MacAddress).Normalize();
-        if (await sensors.IsAssociated(sensor.SensorCode, ct) || await devices.ExistsByMacAddressAsync(catalogMac, ct))
+        if (await sensors.IsAssociated(sensor.SensorCode, ct))
             throw new ApiFailure(409, "SENSOR_OCCUPIED", "Sensor is already associated.");
-        var device = new Device(new CreateDeviceCommand(new FieldId(fieldId), catalogMac, DeviceStatus.Create(status), lastSync ?? DateTimeOffset.UtcNow, sensor.SensorCode, name));
+        var device = new Device(new CreateDeviceCommand(new FieldId(fieldId), new MacAddress(sensor.MacAddress), DeviceStatus.Create(status), lastSync ?? DateTimeOffset.UtcNow));
+        device.Identify(sensor.SensorCode, name);
         await devices.AddAsync(device, ct);
         try
         {

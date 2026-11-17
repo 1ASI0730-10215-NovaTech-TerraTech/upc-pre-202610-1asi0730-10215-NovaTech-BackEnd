@@ -18,7 +18,5 @@ public sealed record MacAddress
 
     public string Value { get; }
 
-    public MacAddress Normalize() => new(Value.Trim().Replace('-', ':').ToUpperInvariant());
-
     public override string ToString() => Value;
 }

@@ -9,6 +9,18 @@ namespace NovaTech.TerraTech.Platform.Iam.Interface.Rest;
 [ApiController, Route("api/v1/authentication"), AllowAnonymous, EnableRateLimiting("account-email")]
 public class AccountEmailController(AccountEmailService emails) : ControllerBase
 {
+    [HttpPost("email-verifications"), ProducesResponseType<AccountEmailAcceptedResource>(202), ProducesResponseType(503)]
+    public async Task<IActionResult> RequestVerification(AccountEmailRequest request, CancellationToken ct)
+    {
+        await emails.RequestVerification(request.EmailAddress, ct);
+        return Accepted(new AccountEmailAcceptedResource("If verification is required, an email will be sent. Please check your inbox."));
+    }
+    [HttpPost("email-verifications/confirm"), ProducesResponseType(204), ProducesResponseType(400)]
+    public async Task<IActionResult> ConfirmVerification(ConfirmEmailResource request, CancellationToken ct)
+    {
+        await emails.ConfirmVerification(request.Token, ct);
+        return NoContent();
+    }
     [HttpPost("password-reset-requests"), ProducesResponseType<AccountEmailAcceptedResource>(202), ProducesResponseType(503)]
     public async Task<IActionResult> RequestPasswordReset(AccountEmailRequest request, CancellationToken ct)
     {

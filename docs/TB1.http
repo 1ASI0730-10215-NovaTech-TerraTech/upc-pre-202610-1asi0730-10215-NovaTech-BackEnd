@@ -43,14 +43,7 @@ Content-Type: application/json
 GET {{baseUrl}}/api/v1/fields
 Authorization: Bearer {{token}}
 
-### Registrar dispositivo (ruta canónica actual, no requiere catálogo). Copiar id devuelto en deviceId.
-POST {{baseUrl}}/api/v1/devices
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{"fieldId":{{fieldId}},"macAddress":"AA:BB:CC:DD:EE:01","status":"OFFLINE","lastSync":"2026-11-15T12:00:00Z","sensorCode":"TT-ABC123","name":"Sensor Norte"}
-
-### Asociar sensor provisionado (ruta legacy / obsoleta para Android; ejecutar --demo-catalog antes)
+### Ejecutar --demo-catalog antes. Copiar id devuelto en deviceId.
 POST {{baseUrl}}/api/v1/devices/register
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -60,13 +53,6 @@ Content-Type: application/json
 ### Sensores de la parcela propia
 GET {{baseUrl}}/api/v1/fields/{{fieldId}}/devices
 Authorization: Bearer {{token}}
-
-### Registrar lectura de sensor (Source = MANUAL). Copiar id devuelto en readingId.
-POST {{baseUrl}}/api/v1/sensor-readings
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{"deviceId":{{deviceId}},"moisturePercent":42.5,"soilTemperatureC":22.0,"nitrogenPpm":35.0,"phosphorusPpm":18.0,"potassiumPpm":60.0}
 
 ### Sin datos: 404 NO_READINGS; ejecutar --demo-readings --device-id <id> y repetir
 GET {{baseUrl}}/api/v1/devices/{{deviceId}}/readings/latest

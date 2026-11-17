@@ -2,7 +2,7 @@
 
 .NET 10, ASP.NET Core, EF Core y MySQL. Se mantienen los contextos DDD, agregados, repositorios, servicios de aplicación y las rutas anteriores. Los nuevos servicios de cuenta, perfil propio y sensores usan los puertos de persistencia; la seguridad y las migraciones se centralizan en infraestructura compartida.
 
-El recorrido de esta entrega es **registro con sesión inmediata → perfil → parcela → registro/asociación de dispositivo → registro o simulación de lecturas → última lectura → histórico de 7/30 días**. El registro ordinario de dispositivos (`POST /api/v1/devices`) no requiere aprovisionamiento previo en catálogo; las lecturas registradas por HTTP (`POST /api/v1/sensor-readings`) llevan `source: "MANUAL"`, mientras que los datos de demostración llevan `source: "SIMULATED"`. Se mantiene temporalmente `POST /api/v1/devices/register` en `DevicesController` como ruta legacy de compatibilidad para clientes Android que aún envían únicamente `sensorCode` sin dirección MAC. Android compondrá sus pantallas y guardará estos resultados en Room; el servidor no requiere un dashboard agregado ni endpoints offline.
+El recorrido de esta entrega es **registro con sesión inmediata → perfil → parcela → asociación de sensor → última lectura → histórico de 7/30 días**. Los datos de demostración llevan `source: "SIMULATED"`. Android compondrá sus pantallas y guardará estos resultados en Room; el servidor no requiere un dashboard agregado ni endpoints offline.
 
 ## Ejecutar en desarrollo
 
@@ -46,7 +46,7 @@ Ejemplos completos: [TB1.http](docs/TB1.http). Contrato para Android: [ANDROID_C
 
 ## Seguridad y compatibilidad
 
-`401`: JWT ausente, inválido, expirado o usuario inexistente. `404`: ruta/recurso inexistente o recurso ajeno (`FIELD_NOT_FOUND`, `DEVICE_NOT_FOUND`, `READING_NOT_FOUND`, `NO_READINGS`). `400`: entrada inválida (`INVALID_SENSOR_CODE`, `INVALID_MAC_ADDRESS`, `INVALID_READING`, `INVALID_RANGE`, `INVALID_INPUT`). `409`: correo duplicado (`EMAIL_EXISTS`), MAC ya registrada (`DEVICE_ALREADY_REGISTERED`), código de sensor ocupado (`SENSOR_OCCUPIED`), lectura duplicada (`READING_ALREADY_RECORDED`) o eliminación con dependencias (`DEPENDENT_RESOURCES`, incluyendo lecturas, reportes y zonas de fertilidad). El detalle individual está disponible en `GET /api/v1/devices/{deviceId}/readings/{readingId}`, con los mismos campos del histórico. Una lectura inexistente o de otro dispositivo devuelve 404 `READING_NOT_FOUND`; una lectura ajena no es accesible. No se limita el detalle a 30 días.
+`401`: JWT ausente, inválido, expirado o usuario inexistente. `404`: ruta/recurso inexistente o recurso ajeno. `400`: entrada inválida. `409`: correo duplicado, sensor ocupado o eliminación con dependencias. El detalle individual está disponible en `GET /api/v1/devices/{deviceId}/readings/{readingId}`, con los mismos campos del histórico. Una lectura inexistente o de otro dispositivo devuelve 404 `READING_NOT_FOUND`; una lectura ajena no es accesible. No se limita el detalle a 30 días.
 
 Los errores usan Problem Details y no incluyen excepciones internas.
 
@@ -54,7 +54,7 @@ Las listas de perfiles, parcelas, dispositivos, reportes, pedidos, notificacione
 
 El registro ahora exige `confirmPassword`: la ausencia o una diferencia exacta con la contraseña devuelve 400. Android también deberá validar la confirmación antes de enviar. Se conserva el login con correo y contraseña solamente.
 
-Se conservan las rutas y campos anteriores, incluido el `PUT` de perfil con `fundo_name`, `contact_phone`, `moisture_threshold` y `temp_threshold`. Se añaden campos opcionales para registros antiguos. La restricción de recursos ajenos es intencional. El alta ordinaria en `POST /api/v1/devices` normaliza la MAC (`XX:XX:XX:XX:XX:XX`), acepta `sensorCode` (`^TT-[0-9A-Z]{6}$`) y `name` opcionales, y **no** exige que el sensor exista en `SensorCatalogItem` (no produce `UNKNOWN_SENSOR`). Su MAC registrada no puede sustituirse por otra identidad. La ruta legacy `POST /api/v1/devices/register` se conserva marcada como obsoleta en `DevicesController` para clientes móviles que solo envían `sensorCode` y dependen del catálogo histórico para resolver su MAC. Las lecturas se registran mediante `POST /api/v1/sensor-readings` (`source: "MANUAL"`).
+Se conservan las rutas y campos anteriores, incluido el `PUT` de perfil con `fundo_name`, `contact_phone`, `moisture_threshold` y `temp_threshold`. Se añaden campos opcionales para registros antiguos. La restricción de recursos ajenos es intencional. Crear un dispositivo por MAC también requiere un sensor provisionado y disponible. Su MAC registrada no puede sustituirse por otra identidad.
 
 Los inventarios antiguos no tenían dueño: la migración los conserva con `owner_user_id = NULL` y quedan ocultos hasta que el equipo atribuya cada registro a un usuario verificado mediante mantenimiento administrativo. No se asignan arbitrariamente al primer usuario.
 

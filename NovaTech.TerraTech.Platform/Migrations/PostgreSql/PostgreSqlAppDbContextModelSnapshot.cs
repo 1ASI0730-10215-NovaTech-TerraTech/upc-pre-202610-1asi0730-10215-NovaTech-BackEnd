@@ -1066,6 +1066,12 @@ namespace NovaTech.TerraTech.Platform.Migrations.PostgreSql
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.Device", b =>
                 {
+                    b.HasOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.SensorCatalogItem", null)
+                        .WithMany()
+                        .HasForeignKey("SensorCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("f_k_devices__sensor_catalog_item_sensor_code");
+
                     b.OwnsOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects.DeviceStatus", "Status", b1 =>
                         {
                             b1.Property<int>("Id")
@@ -1182,14 +1188,14 @@ namespace NovaTech.TerraTech.Platform.Migrations.PostgreSql
                     b.HasOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.Device", null)
                         .WithMany()
                         .HasForeignKey("DeviceId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("f_k_fertility_zones_devices_device_id");
 
                     b.HasOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.Field", null)
                         .WithMany()
                         .HasForeignKey("FieldId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("f_k_fertility_zones__field_field_id");
                 });

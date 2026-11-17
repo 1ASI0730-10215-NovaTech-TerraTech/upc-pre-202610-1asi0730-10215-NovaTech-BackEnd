@@ -19,7 +19,6 @@ public partial class JourneyTests
             Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/health/ready")).StatusCode);
             var response = await client.PostAsJsonAsync("/api/v1/authentication/sign-up", Registration("startup@test.example"));
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-            Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token = production.Emails.Verifications["startup@test.example"] })).StatusCode);
             id = (await Json(response)).GetProperty("id").GetInt32();
         }
 

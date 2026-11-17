@@ -4,10 +4,15 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using NovaTech.TerraTech.Platform.Iam.Domain.Model.Aggregates;
+using NovaTech.TerraTech.Platform.Monitoring.Application.Internal.CommandServices;
 using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates;
+using NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects;
+using NovaTech.TerraTech.Platform.Monitoring.Domain.Repositories;
+using NovaTech.TerraTech.Platform.Shared.Domain.Repositories;
 using Xunit;
 
 public partial class JourneyTests
@@ -344,5 +349,224 @@ public partial class JourneyTests
         await AssertProblem(await server.CreateClient().GetAsync(route), HttpStatusCode.Unauthorized, "UNAUTHENTICATED");
         await AssertProblem(await a.client.GetAsync($"/api/v1/devices/{int.MaxValue}/readings/{fresh.Id}"), HttpStatusCode.NotFound, "DEVICE_NOT_FOUND");
         await server.WithDb(async db => Assert.Equal(2, await db.Set<SensorReading>().IgnoreQueryFilters().CountAsync(x => x.DeviceId == device)));
+    }
+
+    [Fact]
+    public async Task AutomaticCatalogProvisioningReusesCompatibleEntriesAndRejectsConflicts()
+    {
+        var a = await Account();
+        var b = await Account();
+
+        var mac1 = "02:" + string.Join(":", Guid.NewGuid().ToByteArray().Take(5).Select(x => x.ToString("x2")));
+        var mac2 = "02:" + string.Join(":", Guid.NewGuid().ToByteArray().Take(5).Select(x => x.ToString("x2")));
+        var mac3 = "02:" + string.Join(":", Guid.NewGuid().ToByteArray().Take(5).Select(x => x.ToString("x2")));
+        var code2 = "TT-" + Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+        var codeOther = "TT-" + Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+
+        // Caso A1: New MAC without SensorCode -> auto-provisions SensorCatalogItem with generated TT-XXXXXX and creates Device
+        var createdWithoutCode = await a.client.PostAsJsonAsync("/api/v1/devices", new
+        {
+            fieldId = a.fieldId,
+            macAddress = mac1.Replace(':', '-'),
+            status = "OFFLINE",
+            lastSync = DateTimeOffset.UtcNow
+        });
+        Assert.Equal(HttpStatusCode.Created, createdWithoutCode.StatusCode);
+        var d1 = await Json(createdWithoutCode);
+        var generatedCode = d1.GetProperty("sensorCode").GetString()!;
+        Assert.Equal(mac1.ToUpperInvariant(), d1.GetProperty("macAddress").GetString());
+        Assert.Matches("^TT-[0-9A-Z]{6}$", generatedCode);
+        await server.WithDb(async db =>
+        {
+            var cat = await db.Set<SensorCatalogItem>().SingleAsync(x => x.SensorCode == generatedCode);
+            Assert.Equal(mac1.ToUpperInvariant(), cat.MacAddress);
+            Assert.False(cat.IsDemo);
+        });
+
+        // Caso A2: New MAC with explicit SensorCode -> auto-provisions SensorCatalogItem with that SensorCode and creates Device
+        var createdWithCode = await a.client.PostAsJsonAsync("/api/v1/devices", new
+        {
+            fieldId = a.fieldId,
+            macAddress = mac2,
+            status = "ONLINE",
+            lastSync = DateTimeOffset.UtcNow,
+            sensorCode = code2,
+            name = "  Sensor Norte  "
+        });
+        Assert.Equal(HttpStatusCode.Created, createdWithCode.StatusCode);
+        var d2 = await Json(createdWithCode);
+        Assert.Equal(code2, d2.GetProperty("sensorCode").GetString());
+        Assert.Equal("Sensor Norte", d2.GetProperty("name").GetString());
+        Assert.Equal(mac2.ToUpperInvariant(), d2.GetProperty("macAddress").GetString());
+        await server.WithDb(async db =>
+        {
+            var cat = await db.Set<SensorCatalogItem>().SingleAsync(x => x.SensorCode == code2);
+            Assert.Equal(mac2.ToUpperInvariant(), cat.MacAddress);
+        });
+
+        // Caso B: Existing compatible unassociated SensorCatalogItem is reused safely without duplication
+        var preseededCode = await Catalog();
+        string preseededMac = "";
+        await server.WithDb(async db => preseededMac = (await db.Set<SensorCatalogItem>().SingleAsync(x => x.SensorCode == preseededCode)).MacAddress);
+        var reused = await a.client.PostAsJsonAsync("/api/v1/devices", new
+        {
+            fieldId = a.fieldId,
+            macAddress = preseededMac.ToLowerInvariant().Replace(':', '-'),
+            status = "ONLINE",
+            lastSync = DateTimeOffset.UtcNow,
+            sensorCode = preseededCode,
+            name = "Reused Catalog Sensor"
+        });
+        Assert.Equal(HttpStatusCode.Created, reused.StatusCode);
+        var dReused = await Json(reused);
+        Assert.Equal(preseededCode, dReused.GetProperty("sensorCode").GetString());
+        await server.WithDb(async db =>
+        {
+            Assert.Equal(1, await db.Set<SensorCatalogItem>().CountAsync(x => x.SensorCode == preseededCode));
+            Assert.True((await db.Set<SensorCatalogItem>().SingleAsync(x => x.SensorCode == preseededCode)).IsDemo);
+        });
+
+        // Caso C: Duplicate MAC with a different SensorCode -> 409 Conflict (MAC_ADDRESS_CONFLICT)
+        var unassociatedCode = await Catalog();
+        string unassociatedMac = "";
+        await server.WithDb(async db => unassociatedMac = (await db.Set<SensorCatalogItem>().SingleAsync(x => x.SensorCode == unassociatedCode)).MacAddress);
+        await AssertProblem(await a.client.PostAsJsonAsync("/api/v1/devices", new
+        {
+            fieldId = a.fieldId,
+            macAddress = unassociatedMac,
+            status = "ONLINE",
+            lastSync = DateTimeOffset.UtcNow,
+            sensorCode = codeOther
+        }), HttpStatusCode.Conflict, "MAC_ADDRESS_CONFLICT");
+
+        // Caso D: SensorCode associated with another MAC -> 409 Conflict (SENSOR_CODE_CONFLICT)
+        await AssertProblem(await a.client.PostAsJsonAsync("/api/v1/devices", new
+        {
+            fieldId = a.fieldId,
+            macAddress = mac3,
+            status = "ONLINE",
+            lastSync = DateTimeOffset.UtcNow,
+            sensorCode = unassociatedCode
+        }), HttpStatusCode.Conflict, "SENSOR_CODE_CONFLICT");
+
+        // Already registered MAC or occupied SensorCode -> 409 Conflict
+        await AssertProblem(await b.client.PostAsJsonAsync("/api/v1/devices", new
+        {
+            fieldId = b.fieldId,
+            macAddress = mac2.ToUpperInvariant(),
+            status = "ONLINE",
+            lastSync = DateTimeOffset.UtcNow
+        }), HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task DeviceRegistrationFailureRollsBackCatalogProvisioningAtomically()
+    {
+        var a = await Account();
+        Field existingField = null!;
+        await server.WithDb(async db => existingField = await db.Set<Field>().IgnoreQueryFilters().SingleAsync(f => f.Id == a.fieldId));
+
+        var codeRepoFail = "TT-" + Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+        var macRepoFail = ("02:" + string.Join(":", Guid.NewGuid().ToByteArray().Take(5).Select(x => x.ToString("X2")))).ToUpperInvariant();
+
+        // Caso E1: Failure in IDeviceRepository.AddAsync after SensorCatalogItem is staged/saved inside transaction
+        using (var scope = server.Services.CreateScope())
+        {
+            var sp = scope.ServiceProvider;
+            var sensors = sp.GetRequiredService<ISensorDataRepository>();
+            var innerDevices = sp.GetRequiredService<IDeviceRepository>();
+            var uow = sp.GetRequiredService<IUnitOfWork>();
+            var service = new SensorRegistrationService(sensors, new StubFieldRepository(existingField), new FailingDeviceRepository(innerDevices, uow), uow);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                service.Register(codeRepoFail, macRepoFail, a.fieldId, "Rollback Test", "ONLINE", DateTimeOffset.UtcNow, CancellationToken.None));
+        }
+
+        await server.WithDb(async db =>
+        {
+            Assert.False(await db.Set<SensorCatalogItem>().AnyAsync(x => x.SensorCode == codeRepoFail || x.MacAddress == macRepoFail));
+            Assert.False(await db.Set<Device>().IgnoreQueryFilters().AnyAsync(x => x.SensorCode == codeRepoFail));
+        });
+
+        // Caso E2: Relational FK violation when inserting Device after SensorCatalogItem insert in SaveChangesAsync
+        var codeDbFail = "TT-" + Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+        var macDbFail = ("02:" + string.Join(":", Guid.NewGuid().ToByteArray().Take(5).Select(x => x.ToString("X2")))).ToUpperInvariant();
+        using (var scope = server.Services.CreateScope())
+        {
+            var sp = scope.ServiceProvider;
+            var sensors = sp.GetRequiredService<ISensorDataRepository>();
+            var devices = sp.GetRequiredService<IDeviceRepository>();
+            var uow = sp.GetRequiredService<IUnitOfWork>();
+            var service = new SensorRegistrationService(sensors, new StubFieldRepository(existingField), devices, uow);
+
+            await Assert.ThrowsAsync<DbUpdateException>(() =>
+                service.Register(codeDbFail, macDbFail, int.MaxValue - 1, "FK Rollback Test", "ONLINE", DateTimeOffset.UtcNow, CancellationToken.None));
+        }
+
+        await server.WithDb(async db =>
+        {
+            Assert.False(await db.Set<SensorCatalogItem>().AnyAsync(x => x.SensorCode == codeDbFail || x.MacAddress == macDbFail));
+            Assert.False(await db.Set<Device>().IgnoreQueryFilters().AnyAsync(x => x.SensorCode == codeDbFail));
+        });
+    }
+
+    [Fact]
+    public async Task ConcurrentDirectDeviceRegistrationsEnforceUniqueness()
+    {
+        var a = await Account();
+        var sharedMac = "02:" + string.Join(":", Guid.NewGuid().ToByteArray().Take(5).Select(x => x.ToString("X2")));
+        var payload = new
+        {
+            fieldId = a.fieldId,
+            macAddress = sharedMac,
+            status = "ONLINE",
+            lastSync = DateTimeOffset.UtcNow
+        };
+
+        var macAttempts = await Task.WhenAll(
+            a.client.PostAsJsonAsync("/api/v1/devices", payload),
+            a.client.PostAsJsonAsync("/api/v1/devices", payload),
+            a.client.PostAsJsonAsync("/api/v1/devices", payload));
+
+        Assert.Single(macAttempts, x => x.StatusCode == HttpStatusCode.Created);
+        Assert.Equal(2, macAttempts.Count(x => x.StatusCode == HttpStatusCode.Conflict));
+
+        await server.WithDb(async db =>
+        {
+            Assert.Equal(1, await db.Set<SensorCatalogItem>().CountAsync(x => x.MacAddress == sharedMac));
+            Assert.Equal(1, await db.Set<Device>().IgnoreQueryFilters().CountAsync(x => x.MacAddress.Value == sharedMac));
+        });
+    }
+
+    private sealed class FailingDeviceRepository(IDeviceRepository inner, IUnitOfWork uow) : IDeviceRepository
+    {
+        public async Task AddAsync(Device entity, CancellationToken cancellationToken = default)
+        {
+            // Flush the staged SensorCatalogItem inside the active DB transaction before failing on Device
+            await uow.CompleteAsync(cancellationToken);
+            throw new InvalidOperationException("Simulated failure while creating Device.");
+        }
+
+        public void Detach(Device device) => inner.Detach(device);
+        public Task<bool> ExistsByMacAddressAsync(MacAddress macAddress, CancellationToken cancellationToken = default) => inner.ExistsByMacAddressAsync(macAddress, cancellationToken);
+        public Task<bool> ExistsBySensorCodeAsync(string sensorCode, CancellationToken cancellationToken = default) => inner.ExistsBySensorCodeAsync(sensorCode, cancellationToken);
+        public Task<IEnumerable<Device>> FindByFieldIdAsync(FieldId fieldId, CancellationToken cancellationToken = default) => inner.FindByFieldIdAsync(fieldId, cancellationToken);
+        public Task<Device?> FindByIdAsync(int id, CancellationToken cancellationToken = default) => inner.FindByIdAsync(id, cancellationToken);
+        public Task<Device?> FindByMacAddressAsync(MacAddress macAddress, CancellationToken cancellationToken = default) => inner.FindByMacAddressAsync(macAddress, cancellationToken);
+        public Task<IEnumerable<Device>> FindByStatusAsync(DeviceStatus status, CancellationToken cancellationToken = default) => inner.FindByStatusAsync(status, cancellationToken);
+        public Task<IEnumerable<Device>> ListAsync(CancellationToken cancellationToken = default) => inner.ListAsync(cancellationToken);
+        public void Remove(Device entity) => inner.Remove(entity);
+        public void Update(Device entity) => inner.Update(entity);
+    }
+
+    private sealed class StubFieldRepository(Field field) : IFieldRepository
+    {
+        public Task AddAsync(Field entity, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task<Field?> FindByIdAsync(int id, CancellationToken cancellationToken = default) => Task.FromResult<Field?>(field);
+        public Task<Field?> FindBySoilTypeAndLocationLatLongAsync(SoilType SoilType, LocationLatLong LocationLatLong, CancellationToken cancellationToken = default) => Task.FromResult<Field?>(null);
+        public Task<IEnumerable<Field>> FindBySoilTypeAsync(SoilType soilType, CancellationToken cancellationToken = default) => Task.FromResult<IEnumerable<Field>>([]);
+        public Task<IEnumerable<Field>> ListAsync(CancellationToken cancellationToken = default) => Task.FromResult<IEnumerable<Field>>([field]);
+        public void Remove(Field entity) { }
+        public void Update(Field entity) { }
     }
 }

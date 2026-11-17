@@ -10,24 +10,40 @@ using Xunit;
 public partial class JourneyTests
 {
     [Fact]
-    public async Task LegacyRegistrationAndLoginCannotBypassEmailVerification()
+    public async Task LegacyRegistrationAndLoginAllowImmediateAuthenticationWithoutEmailVerification()
     {
         var email = Guid.NewGuid() + "@test.example";
         using (var scope = server.Services.CreateScope())
         {
             var commands = scope.ServiceProvider.GetRequiredService<IUserCommandService>();
             Assert.True((await commands.Handle(new SignUpCommand(email, "test-password"), CancellationToken.None)).IsSuccess);
-            Assert.True((await commands.Handle(new SignInCommand(email, "test-password"), CancellationToken.None)).IsFailure);
+            var signInResult = await commands.Handle(new SignInCommand(email, "test-password"), CancellationToken.None);
+            Assert.True(signInResult.IsSuccess);
+            Assert.False(string.IsNullOrWhiteSpace(signInResult.Value.token));
         }
-        var client = server.CreateClient();
-        Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync("/api/v1/authentication/sign-in", new { emailAddress = email, password = "test-password" })).StatusCode);
-        Assert.Equal(HttpStatusCode.Accepted, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications", new { emailAddress = email })).StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token = server.Emails.Verifications[email] })).StatusCode);
-        using (var scope = server.Services.CreateScope())
+
+        await server.WithDb(async db =>
         {
-            var commands = scope.ServiceProvider.GetRequiredService<IUserCommandService>();
-            Assert.True((await commands.Handle(new SignInCommand(email, "test-password"), CancellationToken.None)).IsSuccess);
-        }
-        await server.WithDb(async db => Assert.False((await db.Set<User>().SingleAsync(user => user.EmailAddress.Value == email)).EmailVerificationExempt));
+            var user = await db.Set<User>().SingleAsync(u => u.EmailAddress.Value == email);
+            Assert.False(user.EmailVerificationExempt);
+            Assert.Null(user.EmailVerifiedAtUtc);
+        });
+
+        var client = server.CreateClient();
+        var login = await client.PostAsJsonAsync("/api/v1/authentication/sign-in", new { emailAddress = email, password = "test-password" });
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        var auth = await Json(login);
+        var token = auth.GetProperty("token").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(token));
+        client.DefaultRequestHeaders.Authorization = new("Bearer", token);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/v1/users/me")).StatusCode);
+
+        await server.WithDb(async db =>
+        {
+            var user = await db.Set<User>().SingleAsync(u => u.EmailAddress.Value == email);
+            db.Set<User>().Remove(user);
+            await db.SaveChangesAsync();
+        });
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/v1/users/me")).StatusCode);
     }
 }

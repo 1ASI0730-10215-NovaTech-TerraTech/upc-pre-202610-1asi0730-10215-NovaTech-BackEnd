@@ -20,13 +20,6 @@ public class ResendAccountEmailSender(HttpClient client, IOptions<AccountEmailOp
             throw Unavailable();
     }
 
-    public Task SendVerification(string email, string token, CancellationToken ct) =>
-        Send(email, token, new AccountEmailTemplate(
-            Subject: "Verifica tu correo de TerraTech",
-            Action: "Verificar correo",
-            Page: "verify-email",
-            Validity: "24 horas"), ct);
-
     public Task SendPasswordReset(string email, string token, CancellationToken ct) =>
         Send(email, token, new AccountEmailTemplate(
             Subject: "Restablece tu contraseña de TerraTech",

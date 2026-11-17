@@ -39,7 +39,6 @@ public class PostgreSqlJourneyTests
         var registration = new { fullName = "Postgres Farmer", emailAddress = email, password = "test-password", confirmPassword = "test-password" };
         Assert.Equal(HttpStatusCode.Created, (await client.PostAsJsonAsync("/api/v1/authentication/sign-up", registration)).StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, (await client.PostAsJsonAsync("/api/v1/authentication/sign-up", registration)).StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token = server.Emails.Verifications[email] })).StatusCode);
         var login = await client.PostAsJsonAsync("/api/v1/authentication/sign-in", new { emailAddress = email, password = "test-password" });
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         var auth = await login.Content.ReadFromJsonAsync<JsonElement>();
@@ -50,13 +49,47 @@ public class PostgreSqlJourneyTests
         var field = await client.PostAsJsonAsync("/api/v1/fields", new { profileId = profileData.GetProperty("id").GetInt32(), name = "North", sizeM2 = 5000, soilType = "SANDY", latitude = -12.0, longitude = -77.0, cropName = "Potato" });
         Assert.Equal(HttpStatusCode.Created, field.StatusCode);
         var fieldData = await field.Content.ReadFromJsonAsync<JsonElement>();
+        var fieldId = fieldData.GetProperty("id").GetInt32();
+
+        var directDevice = await client.PostAsJsonAsync("/api/v1/devices", new { fieldId, macAddress = "02-00-00-00-00-99", status = "ONLINE", lastSync = "2026-11-10T10:00:00Z" });
+        Assert.Equal(HttpStatusCode.Created, directDevice.StatusCode);
+        var directDeviceData = await directDevice.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("02:00:00:00:00:99", directDeviceData.GetProperty("macAddress").GetString());
+        var generatedCode = directDeviceData.GetProperty("sensorCode").GetString();
+        Assert.Matches("^TT-[0-9A-Z]{6}$", generatedCode!);
+
+        var explicitDevice = await client.PostAsJsonAsync("/api/v1/devices", new { fieldId, macAddress = "02-00-00-00-00-98", status = "ONLINE", lastSync = "2026-11-10T10:00:00Z", sensorCode = "TT-ABC123", name = "Postgres Sensor" });
+        Assert.Equal(HttpStatusCode.Created, explicitDevice.StatusCode);
+        var explicitDeviceData = await explicitDevice.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("TT-ABC123", explicitDeviceData.GetProperty("sensorCode").GetString());
+
+        // Caso C & D on PostgreSQL
+        Assert.Equal(HttpStatusCode.Conflict, (await client.PostAsJsonAsync("/api/v1/devices", new { fieldId, macAddress = "02:00:00:00:00:98", status = "ONLINE", lastSync = "2026-11-10T10:00:00Z", sensorCode = "TT-DIFF99" })).StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, (await client.PostAsJsonAsync("/api/v1/devices", new { fieldId, macAddress = "02:00:00:00:00:77", status = "ONLINE", lastSync = "2026-11-10T10:00:00Z", sensorCode = "TT-ABC123" })).StatusCode);
+
+        // Caso F on PostgreSQL: concurrent device registration
+        var concurrentPayload = new { fieldId, macAddress = "02:00:00:00:00:55", status = "ONLINE", lastSync = "2026-11-10T10:00:00Z" };
+        var concurrentResults = await Task.WhenAll(
+            client.PostAsJsonAsync("/api/v1/devices", concurrentPayload),
+            client.PostAsJsonAsync("/api/v1/devices", concurrentPayload),
+            client.PostAsJsonAsync("/api/v1/devices", concurrentPayload));
+        Assert.Single(concurrentResults, r => r.StatusCode == HttpStatusCode.Created);
+        Assert.Equal(2, concurrentResults.Count(r => r.StatusCode == HttpStatusCode.Conflict));
 
         using var scope = server.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.True(await db.Set<SensorCatalogItem>().AnyAsync(x => x.SensorCode == generatedCode && x.MacAddress == "02:00:00:00:00:99"));
+        Assert.True(await db.Set<SensorCatalogItem>().AnyAsync(x => x.SensorCode == "TT-ABC123" && x.MacAddress == "02:00:00:00:00:98"));
         db.Add(new SensorCatalogItem { SensorCode = "TT-000001", MacAddress = "02:00:00:00:00:01", IsDemo = true });
+        db.Add(new SensorCatalogItem { SensorCode = "TT-000002", MacAddress = "02:00:00:00:00:02", IsDemo = true });
         await db.SaveChangesAsync();
-        var device = await client.PostAsJsonAsync("/api/v1/devices/register", new { sensorCode = "TT-000001", fieldId = fieldData.GetProperty("id").GetInt32(), name = "Soil", lastSync = "2026-11-10T10:00:00-05:00" });
+        var device = await client.PostAsJsonAsync("/api/v1/devices/register", new { sensorCode = "TT-000001", fieldId, name = "Soil", lastSync = "2026-11-10T10:00:00-05:00" });
         Assert.Equal(HttpStatusCode.Created, device.StatusCode);
+        // Caso B on PostgreSQL: reuse compatible existing catalog entry via POST /api/v1/devices
+        var reusedCatalogDevice = await client.PostAsJsonAsync("/api/v1/devices", new { fieldId, macAddress = "02-00-00-00-00-02", status = "ONLINE", lastSync = "2026-11-10T10:00:00Z" });
+        Assert.Equal(HttpStatusCode.Created, reusedCatalogDevice.StatusCode);
+        var reusedData = await reusedCatalogDevice.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("TT-000002", reusedData.GetProperty("sensorCode").GetString());
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/v1/fields")).StatusCode);
         await db.Database.MigrateAsync();
         Assert.Empty(await db.Database.GetPendingMigrationsAsync());

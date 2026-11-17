@@ -26,7 +26,6 @@ public partial class JourneyTests(TestServer server) : IClassFixture<TestServer>
         var signUp = await client.PostAsJsonAsync("/api/v1/authentication/sign-up", new { emailAddress = email, password = "test-password", confirmPassword = "test-password", fullName = "Demo Farmer" });
         Assert.Equal(HttpStatusCode.Created, signUp.StatusCode);
         var user = await Json(signUp);
-        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsJsonAsync("/api/v1/authentication/email-verifications/confirm", new { token = server.Emails.Verifications[email] })).StatusCode);
         var login = await client.PostAsJsonAsync("/api/v1/authentication/sign-in", new { emailAddress = email, password = "test-password" });
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         var auth = await Json(login);
@@ -267,7 +266,13 @@ public partial class JourneyTests(TestServer server) : IClassFixture<TestServer>
         Assert.Equal(HttpStatusCode.Conflict, (await a.client.PostAsJsonAsync("/api/v1/devices/register", r)).StatusCode);
         var b = await Account();
         Assert.Equal(HttpStatusCode.Conflict, (await b.client.PostAsJsonAsync("/api/v1/devices/register", new { sensorCode = code, fieldId = b.fieldId, name = "Occupied" })).StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, (await a.client.PostAsJsonAsync("/api/v1/devices", new { fieldId = a.fieldId, macAddress = "AA:BB:CC:DD:EE:FF", status = "ONLINE", lastSync = DateTime.UtcNow })).StatusCode);
+        var directMac = "02:" + string.Join(":", Guid.NewGuid().ToByteArray().Take(5).Select(x => x.ToString("x2")));
+        var direct = await a.client.PostAsJsonAsync("/api/v1/devices", new { fieldId = a.fieldId, macAddress = directMac.Replace(':', '-'), status = "ONLINE", lastSync = DateTime.UtcNow });
+        Assert.Equal(HttpStatusCode.Created, direct.StatusCode);
+        var directJson = await Json(direct);
+        Assert.Equal(directMac.ToUpperInvariant(), directJson.GetProperty("macAddress").GetString());
+        Assert.Matches("^TT-[0-9A-Z]{6}$", directJson.GetProperty("sensorCode").GetString()!);
+        Assert.Equal(HttpStatusCode.Conflict, (await a.client.PostAsJsonAsync("/api/v1/devices", new { fieldId = a.fieldId, macAddress = directMac.ToUpperInvariant(), status = "ONLINE", lastSync = DateTime.UtcNow })).StatusCode);
     }
 
     [Fact]

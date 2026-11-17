@@ -12,7 +12,7 @@ public partial class User(Email emailAddress, string passwordHash)
     public bool EmailVerificationExempt { get; set; }
     public DateTime? EmailVerifiedAtUtc { get; set; }
     public int TokenVersion { get; set; }
-    public bool CanSignIn() => EmailVerificationExempt || EmailVerifiedAtUtc is not null;
+    public bool CanSignIn() => true;
     public string? FullName { get; private set; }
 
     public void SetFullName(string name) => FullName = name.Trim();

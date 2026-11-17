@@ -47,10 +47,17 @@ public class PostgreSqlConfigurationTests
             .UseNpgsql("Host=localhost;Database=terratech_design;Username=design");
         using var db = new PostgreSqlAppDbContext(options.Options);
         Assert.Single(db.Database.GetMigrations());
+        Assert.False(db.Database.HasPendingModelChanges());
         var sql = db.Database.GenerateCreateScript();
         Assert.Contains("terratech.users", sql);
         Assert.DoesNotContain("longtext", sql);
         Assert.DoesNotContain("AUTO_INCREMENT", sql);
+
+        var mysqlOptions = new DbContextOptionsBuilder<AppDbContext>()
+            .UseMySQL("server=localhost;database=terratech_design;user=design");
+        using var mysqlDb = new AppDbContext(mysqlOptions.Options);
+        Assert.Equal(11, mysqlDb.Database.GetMigrations().Count());
+        Assert.False(mysqlDb.Database.HasPendingModelChanges());
     }
 
     [Theory]

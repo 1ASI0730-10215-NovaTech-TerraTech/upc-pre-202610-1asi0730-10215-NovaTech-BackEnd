@@ -13,7 +13,8 @@ public class DeviceCommandService(IDeviceRepository deviceRepository, IUnitOfWor
 {
     public async Task<Result<Device>> Handle(CreateDeviceCommand command, CancellationToken cancellationToken = default)
     {
-        var device = await registration.Register(null, command.MacAddress.Value, command.FieldId.Value, "Sensor", command.Status.Value, command.LastSync, cancellationToken);
+        var name = string.IsNullOrWhiteSpace(command.Name) ? "Sensor" : command.Name.Trim();
+        var device = await registration.Register(command.SensorCode, command.MacAddress.Value, command.FieldId.Value, name, command.Status.Value, command.LastSync, cancellationToken);
         return Result<Device>.Success(device);
     }
 
@@ -28,16 +29,17 @@ public class DeviceCommandService(IDeviceRepository deviceRepository, IUnitOfWor
                 return Result<Device>.Failure(CreateDeviceError.DeviceNotFound, $"Device with id {command.Id} not found.");
             }
 
-            var existingDevice = await deviceRepository.FindByMacAddressAsync(command.MacAddress, cancellationToken);
+            var normalizedMac = command.MacAddress.Normalize();
+            var existingDevice = await deviceRepository.FindByMacAddressAsync(normalizedMac, cancellationToken);
             if (existingDevice is not null && existingDevice.Id != command.Id)
             {
-                logger.LogWarning("MAC {MacAddress} already used by another device", command.MacAddress);
-                return Result<Device>.Failure(CreateDeviceError.DuplicateDevice, $"MAC address {command.MacAddress} is already in use.");
+                logger.LogWarning("MAC {MacAddress} already used by another device", normalizedMac);
+                return Result<Device>.Failure(CreateDeviceError.DuplicateDevice, $"MAC address {normalizedMac} is already in use.");
             }
 
-            if (device.MacAddress.Value.Replace('-', ':').ToUpperInvariant() != command.MacAddress.Value.Replace('-', ':').ToUpperInvariant())
+            if (device.MacAddress.Value.Replace('-', ':').ToUpperInvariant() != normalizedMac.Value)
                 return Result<Device>.Failure(CreateDeviceError.InvalidData, "Registered MAC cannot be changed.");
-            device.Update(command);
+            device.Update(command with { MacAddress = normalizedMac });
             deviceRepository.Update(device);
             await unitOfWork.CompleteAsync(cancellationToken);
             logger.LogInformation("Device {Id} updated successfully", command.Id);

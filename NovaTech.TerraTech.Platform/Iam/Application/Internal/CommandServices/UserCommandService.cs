@@ -19,7 +19,7 @@ public class UserCommandService(IUserRepository userRepository, ITokenService to
     public async Task<Result<(User user, string token)>> Handle(SignInCommand command, CancellationToken cancellationToken)
     {
         var user = await userRepository.FindByEmailAsync(new Email(command.Email), cancellationToken);
-        if (user is null || !hashingService.VerifyPassword(command.Password, user.PasswordHash) || !user.CanSignIn())
+        if (user is null || !hashingService.VerifyPassword(command.Password, user.PasswordHash))
         {
             return Result<(User user, string token)>.Failure(IamError.InvalidCredentials, _localizer[nameof(IamError.InvalidCredentials)]);
         }

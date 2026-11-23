@@ -12,6 +12,6 @@ public static class DeviceResourceFromEntityAssembler
         var macAddress = entity.MacAddress?.Value ?? string.Empty;
         var status = entity.Status?.Value ?? string.Empty;
         var lastSync = entity.LastSync?.Value ?? DateTimeOffset.MinValue;
-        return new DeviceResource(entity.Id, fieldId, macAddress, status, lastSync, entity.SensorCode, entity.Name);
+        return new DeviceResource(entity.Id, fieldId, macAddress, status, lastSync, entity.SensorCode, entity.Name, entity.BatteryLevelPercent);
     }
 }

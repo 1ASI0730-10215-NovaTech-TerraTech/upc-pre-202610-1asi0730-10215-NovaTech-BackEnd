@@ -30,10 +30,14 @@ public partial class Device
 
         if (!string.IsNullOrWhiteSpace(command.Name))
             Name = command.Name.Trim();
+        if (command.BatteryLevelPercent is < 0 or > 100)
+            throw new ArgumentOutOfRangeException(nameof(command), "Battery level percent must be between 0 and 100.");
+        BatteryLevelPercent = command.BatteryLevelPercent;
     }
 
     public string? SensorCode { get; private set; }
     public string? Name { get; private set; }
+    public int? BatteryLevelPercent { get; private set; }
 
     public void Identify(string code, string name)
     {

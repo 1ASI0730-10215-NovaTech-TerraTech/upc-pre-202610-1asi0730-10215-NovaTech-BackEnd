@@ -20,6 +20,7 @@ using Xunit;
 public class TestServer : WebApplicationFactory<Program>, IAsyncLifetime
 {
     public const string Secret = "Tb1IntegrationOnlyRandomKeyWithAtLeast32Bytes2026ExtraEntropyForJwtAlgorithmTests";
+    public const string WebhookApiKey = "test-only-webhook-api-key-2026";
     public string Connection { get; private set; } = null!;
     public FakeAccountEmailSender Emails { get; } = new();
     public ControlledClock Clock { get; } = new();
@@ -28,6 +29,7 @@ public class TestServer : WebApplicationFactory<Program>, IAsyncLifetime
     {
         builder.UseEnvironment("Development");
         builder.UseSetting("Email:RequestsPerMinute", "10000");
+        builder.UseSetting("Webhooks:ApiKey", WebhookApiKey);
         builder.ConfigureServices(services => services.AddSingleton<TimeProvider>(Clock).AddSingleton<NovaTech.TerraTech.Platform.Iam.Application.Internal.OutboundServices.IAccountEmailSender>(Emails));
     }
 

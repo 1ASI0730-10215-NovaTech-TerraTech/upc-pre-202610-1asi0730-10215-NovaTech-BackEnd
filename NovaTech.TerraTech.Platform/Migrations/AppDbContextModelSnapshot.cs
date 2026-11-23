@@ -349,6 +349,10 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .HasColumnType("int")
                         .HasColumnName("id");
 
+                    b.Property<int?>("BatteryLevelPercent")
+                        .HasColumnType("int")
+                        .HasColumnName("battery_level_percent");
+
                     b.Property<DateTimeOffset?>("CreatedAt")
                         .HasColumnType("datetime")
                         .HasColumnName("created_at");
@@ -569,6 +573,89 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .HasDatabaseName("i_x_sensor_readings_device_id_recorded_at");
 
                     b.ToTable("sensor_readings");
+                });
+
+            modelBuilder.Entity("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.WebhookRecommendation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)")
+                        .HasColumnName("action");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)")
+                        .HasColumnName("category");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("DeviceId")
+                        .HasColumnType("int")
+                        .HasColumnName("device_id");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("int")
+                        .HasColumnName("duration_minutes");
+
+                    b.Property<string>("ExternalId")
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)")
+                        .HasColumnName("external_id");
+
+                    b.Property<int?>("FertilityZoneId")
+                        .HasColumnType("int")
+                        .HasColumnName("fertility_zone_id");
+
+                    b.Property<int>("FieldId")
+                        .HasColumnType("int")
+                        .HasColumnName("field_id");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("priority");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)")
+                        .HasColumnName("source");
+
+                    b.Property<string>("Zone")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)")
+                        .HasColumnName("zone");
+
+                    b.HasKey("Id")
+                        .HasName("p_k_webhook_recommendations");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("i_x_webhook_recommendations_created_at");
+
+                    b.HasIndex("DeviceId")
+                        .HasDatabaseName("i_x_webhook_recommendations_device_id");
+
+                    b.HasIndex("FieldId")
+                        .HasDatabaseName("i_x_webhook_recommendations_field_id");
+
+                    b.ToTable("webhook_recommendations", (string)null);
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.NotificationManagement.Domain.Model.Aggregates.Notification", b =>
@@ -1308,6 +1395,22 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("f_k_sensor_readings_devices_device_id");
+                });
+
+            modelBuilder.Entity("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.WebhookRecommendation", b =>
+                {
+                    b.HasOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.Device", null)
+                        .WithMany()
+                        .HasForeignKey("DeviceId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("f_k_webhook_recommendations_devices_device_id");
+
+                    b.HasOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.Field", null)
+                        .WithMany()
+                        .HasForeignKey("FieldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("f_k_webhook_recommendations_fields_field_id");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.NotificationManagement.Domain.Model.Aggregates.Notification", b =>

@@ -15,6 +15,12 @@ public class OwnershipFilter(AppDbContext db) : IAsyncActionFilter, IAlwaysRunRe
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext c, ActionExecutionDelegate next)
     {
+        if (c.ActionDescriptor.EndpointMetadata.OfType<Microsoft.AspNetCore.Authorization.IAllowAnonymous>().Any())
+        {
+            await next();
+            return;
+        }
+
         var controller = c.RouteData.Values["controller"]?.ToString();
         var method = c.HttpContext.Request.Method;
         var write = method != "GET";

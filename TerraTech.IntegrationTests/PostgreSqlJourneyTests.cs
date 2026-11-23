@@ -107,6 +107,7 @@ public class PostgreSqlJourneyTests
             builder.UseSetting("Database:MigrateOnStartup", "true");
             builder.UseSetting("ConnectionStrings:DefaultConnection", connection);
             builder.UseSetting("TokenSettings:Secret", TestServer.Secret);
+            builder.UseSetting("Webhooks:ApiKey", TestServer.WebhookApiKey);
             builder.ConfigureServices(services => services.AddSingleton<IAccountEmailSender>(Emails));
         }
     }

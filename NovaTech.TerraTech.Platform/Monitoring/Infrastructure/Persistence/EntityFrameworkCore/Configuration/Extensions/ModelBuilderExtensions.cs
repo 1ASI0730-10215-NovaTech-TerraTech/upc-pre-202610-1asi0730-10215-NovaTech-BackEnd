@@ -186,5 +186,35 @@ public static class ModelBuilderExtensions
                 .IsRequired()
                 .HasDefaultValue(50.0);
         });
+
+        builder.Entity<WebhookRecommendation>(rec =>
+        {
+            rec.ToTable("WebhookRecommendations");
+            rec.HasKey(x => x.Id);
+            rec.Property(x => x.Id)
+                .IsRequired()
+                .ValueGeneratedOnAdd();
+            rec.Property(x => x.FieldId).IsRequired();
+            rec.Property(x => x.Zone).HasMaxLength(120).IsRequired();
+            rec.Property(x => x.Action).HasMaxLength(160).IsRequired();
+            rec.Property(x => x.DurationMinutes).IsRequired();
+            rec.Property(x => x.Priority).HasMaxLength(20).IsRequired();
+            rec.Property(x => x.Reason).HasMaxLength(1000).IsRequired();
+            rec.Property(x => x.Category).HasMaxLength(40).IsRequired();
+            rec.Property(x => x.Source).HasMaxLength(80).IsRequired();
+            rec.Property(x => x.ExternalId).HasMaxLength(120);
+            rec.Property(x => x.CreatedAt).IsRequired();
+            rec.HasOne<Field>()
+                .WithMany()
+                .HasForeignKey(x => x.FieldId)
+                .OnDelete(DeleteBehavior.Cascade);
+            rec.HasOne<Device>()
+                .WithMany()
+                .HasForeignKey(x => x.DeviceId)
+                .OnDelete(DeleteBehavior.SetNull);
+            rec.HasIndex(x => x.FieldId);
+            rec.HasIndex(x => x.DeviceId);
+            rec.HasIndex(x => x.CreatedAt);
+        });
     }
 }

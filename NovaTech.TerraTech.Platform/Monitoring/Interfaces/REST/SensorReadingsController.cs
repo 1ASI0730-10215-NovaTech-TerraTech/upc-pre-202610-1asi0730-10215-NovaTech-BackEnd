@@ -22,11 +22,11 @@ public class SensorReadingsController(NovaTech.TerraTech.Platform.Monitoring.App
     }
 
     [HttpGet("{id:int}/readings/latest")]
-    [SwaggerOperation(Summary = "Latest soil reading", Description = "UTC timestamp; moisture in %, soil temperature in °C, N/P/K in ppm. SIMULATED identifies demo data. isStale becomes true after 30 minutes; NO_READINGS is returned when empty.")]
+    [SwaggerOperation(Summary = "Latest soil reading", Description = "UTC timestamp; moisture in %, soil temperature in °C, N/P/K in ppm, fieldId, sensorCode, batteryLevelPercent, and elapsedMinutes. SIMULATED identifies demo data. isStale becomes true after 30 minutes; NO_READINGS is returned when empty; DEVICE_NOT_FOUND when unknown.")]
     public async Task<ActionResult<LatestReadingResource>> Latest(int id, CancellationToken ct)
     {
-        var(reading, isStale) = await queries.Latest(id, ct);
-        return new LatestReadingResource(Resource(reading), isStale);
+        var (reading, isStale, fieldId, sensorCode, batteryLevelPercent, elapsedMinutes) = await queries.Latest(id, ct);
+        return new LatestReadingResource(Resource(reading), isStale, fieldId, sensorCode, batteryLevelPercent, elapsedMinutes);
     }
 
     [HttpGet("{id:int}/readings")]

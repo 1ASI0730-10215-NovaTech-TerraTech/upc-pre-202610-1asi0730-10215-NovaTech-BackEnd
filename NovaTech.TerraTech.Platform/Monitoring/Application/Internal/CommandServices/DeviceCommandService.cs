@@ -14,7 +14,7 @@ public class DeviceCommandService(IDeviceRepository deviceRepository, IUnitOfWor
     public async Task<Result<Device>> Handle(CreateDeviceCommand command, CancellationToken cancellationToken = default)
     {
         var name = string.IsNullOrWhiteSpace(command.Name) ? "Sensor" : command.Name.Trim();
-        var device = await registration.Register(command.SensorCode, command.MacAddress.Value, command.FieldId.Value, name, command.Status.Value, command.LastSync, cancellationToken);
+        var device = await registration.Register(command.SensorCode, command.MacAddress.Value, command.FieldId.Value, name, command.Status.Value, command.LastSync, cancellationToken, command.BatteryLevelPercent);
         return Result<Device>.Success(device);
     }
 

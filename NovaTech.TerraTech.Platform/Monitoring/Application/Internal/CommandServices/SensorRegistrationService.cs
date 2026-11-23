@@ -16,7 +16,7 @@ public class SensorRegistrationService(ISensorDataRepository sensors, IFieldRepo
     private static readonly Regex SensorCodeRegex = new("^TT-[0-9A-Z]{6}$", RegexOptions.Compiled);
     private const string Base36Alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    public async Task<Device> Register(string? code, string? mac, int fieldId, string name, string status = "OFFLINE", DateTimeOffset? lastSync = null, CancellationToken ct = default)
+    public async Task<Device> Register(string? code, string? mac, int fieldId, string name, string status = "OFFLINE", DateTimeOffset? lastSync = null, CancellationToken ct = default, int? batteryLevelPercent = null)
     {
         var normalizedCode = string.IsNullOrWhiteSpace(code) ? null : code.Trim();
         if (normalizedCode is not null && !SensorCodeRegex.IsMatch(normalizedCode))
@@ -68,7 +68,7 @@ public class SensorRegistrationService(ISensorDataRepository sensors, IFieldRepo
             if (await sensors.IsAssociated(sensorByCode.SensorCode, ct) || await devices.ExistsByMacAddressAsync(catalogMac, ct))
                 throw new ApiFailure(409, "SENSOR_OCCUPIED", "Sensor is already associated.");
 
-            var legacyDevice = new Device(new CreateDeviceCommand(new FieldId(fieldId), new MacAddress(sensorByCode.MacAddress), deviceStatus, lastSync ?? DateTimeOffset.UtcNow, sensorByCode.SensorCode, normalizedName));
+            var legacyDevice = new Device(new CreateDeviceCommand(new FieldId(fieldId), new MacAddress(sensorByCode.MacAddress), deviceStatus, lastSync ?? DateTimeOffset.UtcNow, sensorByCode.SensorCode, normalizedName, batteryLevelPercent));
             legacyDevice.Identify(sensorByCode.SensorCode, normalizedName);
             await devices.AddAsync(legacyDevice, ct);
             try
@@ -121,7 +121,7 @@ public class SensorRegistrationService(ISensorDataRepository sensors, IFieldRepo
                 catalogItem = createdCatalogItem;
             }
 
-            device = new Device(new CreateDeviceCommand(new FieldId(fieldId), macValue!, deviceStatus, lastSync ?? DateTimeOffset.UtcNow, catalogItem.SensorCode, normalizedName));
+            device = new Device(new CreateDeviceCommand(new FieldId(fieldId), macValue!, deviceStatus, lastSync ?? DateTimeOffset.UtcNow, catalogItem.SensorCode, normalizedName, batteryLevelPercent));
             device.Identify(catalogItem.SensorCode, normalizedName);
             await devices.AddAsync(device, ct);
             await unitOfWork.CompleteAsync(ct);

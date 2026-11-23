@@ -15,6 +15,12 @@ public class OwnershipFilter(AppDbContext db) : IAsyncActionFilter, IAlwaysRunRe
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext c, ActionExecutionDelegate next)
     {
+        if (c.ActionDescriptor.EndpointMetadata.OfType<Microsoft.AspNetCore.Authorization.IAllowAnonymous>().Any())
+        {
+            await next();
+            return;
+        }
+
         var controller = c.RouteData.Values["controller"]?.ToString();
         var method = c.HttpContext.Request.Method;
         var write = method != "GET";
@@ -97,7 +103,9 @@ public class OwnershipFilter(AppDbContext db) : IAsyncActionFilter, IAlwaysRunRe
                 };
                 if (!found)
                 {
-                    c.Result = ApiFailure.Result(404, "RESOURCE_NOT_FOUND", "Resource was not found.");
+                    c.Result = controller is "Devices" or "SensorReadings"
+                        ? ApiFailure.Result(404, "DEVICE_NOT_FOUND", "Device was not found.")
+                        : ApiFailure.Result(404, "RESOURCE_NOT_FOUND", "Resource was not found.");
                     return;
                 }
 

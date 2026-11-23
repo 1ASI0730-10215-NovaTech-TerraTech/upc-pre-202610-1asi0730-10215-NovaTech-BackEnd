@@ -7,6 +7,6 @@ public static class CreateDeviceCommandFromResourceAssembler
 {
     public static CreateDeviceCommand ToCommandFromResource(CreateDeviceResource resource)
     {
-        return new CreateDeviceCommand(new FieldId(resource.FieldId), new MacAddress(resource.MacAddress).Normalize(), DeviceStatus.Create(resource.Status), resource.LastSync, resource.SensorCode, resource.Name);
+        return new CreateDeviceCommand(new FieldId(resource.FieldId), new MacAddress(resource.MacAddress).Normalize(), DeviceStatus.Create(resource.Status), resource.LastSync, resource.SensorCode, resource.Name, resource.BatteryLevelPercent);
     }
 }

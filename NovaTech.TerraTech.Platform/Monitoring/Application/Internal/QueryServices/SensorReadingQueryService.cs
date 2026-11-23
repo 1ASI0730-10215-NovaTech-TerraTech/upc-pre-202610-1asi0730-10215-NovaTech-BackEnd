@@ -5,11 +5,20 @@ using NovaTech.TerraTech.Platform.ProfileManagement.Domain.Repositories;
 namespace NovaTech.TerraTech.Platform.Monitoring.Application.Internal.QueryServices;
 public class SensorReadingQueryService(ISensorDataRepository readings, IDeviceRepository devices, IFieldRepository fields, IProfileRepository profiles, TimeProvider clock)
 {
-    public async Task<(SensorReading reading, bool isStale)> Latest(int id, CancellationToken ct)
+    public async Task<(SensorReading reading, bool isStale, int fieldId, string sensorCode, int? batteryLevelPercent, int elapsedMinutes)> Latest(int id, CancellationToken ct)
     {
-        await Device(id, ct);
+        var device = await Device(id, ct);
         var reading = await readings.Latest(id, ct) ?? throw new ApiFailure(404, "NO_READINGS", "Sensor has no readings.");
-        return (reading, clock.GetUtcNow().UtcDateTime - reading.RecordedAt > TimeSpan.FromMinutes(30));
+        var elapsedSpan = clock.GetUtcNow().UtcDateTime - reading.RecordedAt;
+        var isStale = elapsedSpan > TimeSpan.FromMinutes(30);
+        var elapsedMinutes = Math.Max(0, (int)Math.Floor(elapsedSpan.TotalMinutes));
+        var sensorCode = !string.IsNullOrWhiteSpace(device.SensorCode)
+            ? device.SensorCode
+            : !string.IsNullOrWhiteSpace(device.Name)
+                ? device.Name
+                : $"DEV-{device.Id}";
+        var battery = device.BatteryLevelPercent ?? (device.Status.Value == "LOW_BATTERY" ? 15 : device.Status.Value == "ONLINE" ? 90 : (int?)null);
+        return (reading, isStale, device.FieldId.Value, sensorCode, battery, elapsedMinutes);
     }
 
     public async Task<SensorReading> Detail(int deviceId, int readingId, CancellationToken ct)

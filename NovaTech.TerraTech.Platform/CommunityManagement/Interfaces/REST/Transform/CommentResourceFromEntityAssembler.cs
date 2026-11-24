@@ -5,15 +5,16 @@ namespace NovaTech.TerraTech.Platform.CommunityManagement.Interfaces.REST.Transf
 
 public static class CommentResourceFromEntityAssembler
 {
-    public static CommentResource ToResourceFromEntity(Comment entity)
+    public static CommentResource ToResourceFromEntity(Comment entity, string? authorName = null)
     {
         return new CommentResource(
             entity.Id,
-            entity.AuthorProfileId,
+            entity.UserId,
+            entity.ProductId,
             entity.TargetProfileId,
             entity.Content,
             entity.Rating,
-            entity.CreatedAt
-        );
+            entity.CreatedAt,
+            authorName);
     }
 }

@@ -1,0 +1,99 @@
+@baseUrl = http://localhost:8080
+@token = REEMPLAZAR_CON_TOKEN_DE_REGISTRO_O_LOGIN
+@profileId = 1
+@fieldId = 1
+@deviceId = 1
+@readingId = 1
+
+### Registro (cambiar correo para una nueva cuenta; repetir produce 409)
+POST {{baseUrl}}/api/v1/authentication/sign-up
+Content-Type: application/json
+
+{"fullName":"Ana Torres","emailAddress":"ana@example.test","password":"cambiar-para-demo","confirmPassword":"cambiar-para-demo"}
+
+### Login
+POST {{baseUrl}}/api/v1/authentication/sign-in
+Content-Type: application/json
+
+{"emailAddress":"ana@example.test","password":"cambiar-para-demo"}
+
+### Cuenta propia
+GET {{baseUrl}}/api/v1/users/me
+Authorization: Bearer {{token}}
+
+### Perfil propio (404 antes de completarlo)
+GET {{baseUrl}}/api/v1/profiles/me
+Authorization: Bearer {{token}}
+
+### Completar perfil; copiar id devuelto en profileId
+PUT {{baseUrl}}/api/v1/profiles/me
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"fullName":"Ana Torres","fundoName":"Fundo Norte","contactPhone":"999888777","location":"Huaral, Lima","sizeM2":10000}
+
+### Parcela; copiar id devuelto en fieldId
+POST {{baseUrl}}/api/v1/fields
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"profileId":{{profileId}},"name":"Parcela Norte","sizeM2":5000,"soilType":"Franco","latitude":-11.5,"longitude":-77.2,"cropName":"Papa"}
+
+### Parcelas propias
+GET {{baseUrl}}/api/v1/fields
+Authorization: Bearer {{token}}
+
+### Ejecutar --demo-catalog antes. Copiar id devuelto en deviceId.
+POST {{baseUrl}}/api/v1/devices/register
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"sensorCode":"TT-ZZZ001","fieldId":{{fieldId}},"name":"Sensor Norte"}
+
+### Sensores de la parcela propia
+GET {{baseUrl}}/api/v1/fields/{{fieldId}}/devices
+Authorization: Bearer {{token}}
+
+### Sin datos: 404 NO_READINGS; ejecutar --demo-readings --device-id <id> y repetir
+GET {{baseUrl}}/api/v1/devices/{{deviceId}}/readings/latest
+Authorization: Bearer {{token}}
+
+### Histórico 7 días
+GET {{baseUrl}}/api/v1/devices/{{deviceId}}/readings?days=7
+Authorization: Bearer {{token}}
+
+### Histórico 30 días
+GET {{baseUrl}}/api/v1/devices/{{deviceId}}/readings?days=30
+Authorization: Bearer {{token}}
+
+### Perfil legado: los campos snake_case permanecen
+PUT {{baseUrl}}/api/v1/profiles/{{profileId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"fundo_name":"Fundo Norte","contact_phone":"999888777","moisture_threshold":30,"temp_threshold":35}
+
+### Detalle: copiar un id de lectura del histórico en readingId
+GET {{baseUrl}}/api/v1/devices/{{deviceId}}/readings/{{readingId}}
+Authorization: Bearer {{token}}
+
+### Parcela con contorno (token obtenido de registro o login)
+POST {{baseUrl}}/api/v1/fields
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "profileId": {{profileId}},
+  "name": "Parcela con mapa",
+  "cropName": "Papa",
+  "soilType": "Franco",
+  "sizeM2": 12000,
+  "latitude": -14.0005,
+  "longitude": -74.9995,
+  "boundary": [
+    {"latitude": -14.0, "longitude": -75.0},
+    {"latitude": -14.0, "longitude": -74.999},
+    {"latitude": -14.001, "longitude": -74.999},
+    {"latitude": -14.001, "longitude": -75.0}
+  ]
+}

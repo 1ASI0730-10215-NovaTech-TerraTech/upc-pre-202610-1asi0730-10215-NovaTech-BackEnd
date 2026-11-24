@@ -1,5 +1,4 @@
 namespace NovaTech.TerraTech.Platform.CommercialManagement.Application.Errors;
-
 public enum CommercialError
 {
     NotFound,
@@ -8,6 +7,7 @@ public enum CommercialError
     InvalidOrderStatus,
     InvalidPaymentMethod,
     InsufficientStock,
+    StockConflict,
     OrderValidationFailed,
     SubscriptionNotFound,
     PaymentFailed,

@@ -2,17 +2,23 @@ using NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Commands;
 using NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.ValueObjects;
 
 namespace NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Aggregates;
-
 public partial class Order
 {
-    protected Order() { }
+    protected Order()
+    {
+        ProductName = string.Empty;
+    }
 
     public Order(CreateOrderCommand command, Product product)
     {
         ArgumentNullException.ThrowIfNull(command);
         ArgumentNullException.ThrowIfNull(product);
+        if (command.UserId <= 0)
+            throw new ArgumentException("UserId must be greater than zero", nameof(command));
+        if (command.Quantity <= 0)
+            throw new ArgumentException("Quantity must be greater than zero", nameof(command));
 
-        ProfileId = command.ProfileId;
+        UserId = command.UserId;
         ProductId = command.ProductId;
         ProductName = product.Name;
         Quantity = command.Quantity;
@@ -23,7 +29,7 @@ public partial class Order
     }
 
     public int Id { get; private set; }
-    public int ProfileId { get; private set; }
+    public int UserId { get; private set; }
     public int ProductId { get; private set; }
     public string ProductName { get; private set; }
     public int Quantity { get; private set; }
@@ -38,15 +44,17 @@ public partial class Order
     {
         if (Status != OrderStatus.Pending)
             throw new InvalidOperationException($"Order cannot be validated. Current status: {Status}");
-
         Status = OrderStatus.Validated;
     }
 
     public void UpdateStatus(OrderStatus newStatus)
     {
-        if (newStatus == OrderStatus.Cancelled && Status == OrderStatus.Completed)
-            throw new ArgumentException("Cannot cancel a completed order");
-
+        if (newStatus == Status)
+            return;
+        if (Status == OrderStatus.Cancelled)
+            throw new ArgumentException("A cancelled order cannot change status", nameof(newStatus));
+        if (Status == OrderStatus.Completed)
+            throw new ArgumentException("A completed order cannot change status", nameof(newStatus));
         Status = newStatus;
     }
 
@@ -54,7 +62,6 @@ public partial class Order
     {
         if (Status != OrderStatus.Validated)
             throw new InvalidOperationException($"Order cannot be marked as paid. Current status: {Status}");
-
         Status = OrderStatus.Paid;
     }
 
@@ -62,7 +69,6 @@ public partial class Order
     {
         if (Status != OrderStatus.Paid)
             throw new InvalidOperationException($"Order cannot be completed. Current status: {Status}");
-
         Status = OrderStatus.Completed;
     }
 }

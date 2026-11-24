@@ -1,6 +1,4 @@
-namespace NovaTech.TerraTech.Platform.Iam.Interface.Rest.Resources;
+using System.ComponentModel.DataAnnotations;
 
-/// <summary>
-///     Represents the inbound credentials required for a user to sign in.
-/// </summary>
-public record SignInResource(string EmailAddress, string Password);
+namespace NovaTech.TerraTech.Platform.Iam.Interface.Rest.Resources;
+public record SignInResource([Required, EmailAddress] string EmailAddress, [Required] string Password);

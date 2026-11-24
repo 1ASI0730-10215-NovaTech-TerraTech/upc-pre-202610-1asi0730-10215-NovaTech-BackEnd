@@ -1,20 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace NovaTech.TerraTech.Platform.Monitoring.Interfaces.REST.Resources;
-
 [SwaggerSchema(Description = "Request payload to create a Device")]
-public record CreateDeviceResource(
-    [Required]
-    [SwaggerParameter(Description = "Field ID (the field this device belongs to)")] int FieldId,
-    
-    [Required]
-    [RegularExpression(@"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$", ErrorMessage = "MAC address must be in format XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX")]
-    [SwaggerParameter(Description = "MAC address")] string MacAddress,
-    
-    [Required]
-    [SwaggerParameter(Description = "Device status (ONLINE, OFFLINE, LOW_BATTERY)")] string Status,
-    
-    [Required]
-    [SwaggerParameter(Description = "Last synchronization timestamp (ISO format)")] DateTimeOffset LastSync
-);
+public record CreateDeviceResource([Required][SwaggerParameter(Description = "Field ID (the field this device belongs to)")] int FieldId, [Required][RegularExpression(@"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$", ErrorMessage = "MAC address must be in format XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX")][SwaggerParameter(Description = "MAC address")] string MacAddress, [Required][SwaggerParameter(Description = "Device status (ONLINE, OFFLINE, LOW_BATTERY)")] string Status, [Required][SwaggerParameter(Description = "Last synchronization timestamp (ISO format)")] DateTimeOffset LastSync, [RegularExpression("^TT-[0-9A-Z]{6}$", ErrorMessage = "Sensor code must match format TT-XXXXXX.")][SwaggerParameter(Description = "Optional sensor code (TT-XXXXXX)")] string? SensorCode = null, [MaxLength(100)][SwaggerParameter(Description = "Optional display name for the device")] string? Name = null, [Range(0, 100, ErrorMessage = "Battery level percent must be between 0 and 100.")][SwaggerParameter(Description = "Optional battery level percentage (0-100)")] int? BatteryLevelPercent = null);

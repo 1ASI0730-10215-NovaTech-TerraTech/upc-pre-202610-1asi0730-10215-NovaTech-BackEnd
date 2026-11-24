@@ -5,41 +5,47 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NovaTech.TerraTech.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace NovaTech.TerraTech.Platform.Migrations
+namespace NovaTech.TerraTech.Platform.Migrations.PostgreSql
 {
-    [DbContext(typeof(AppDbContext))]
-    [Migration("20261123071036_AddWebhookRecommendationsAndBattery")]
-    partial class AddWebhookRecommendationsAndBattery
+    [DbContext(typeof(PostgreSqlAppDbContext))]
+    [Migration("20261124013954_AddProductPreferencesUs31")]
+    partial class AddProductPreferencesUs31
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("terratech")
                 .HasAnnotation("ProductVersion", "10.0.8")
-                .HasAnnotation("Relational:MaxIdentifierLength", 64);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Model.Aggregates.Report", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
                     b.Property<double>("ConfidenceScore")
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasColumnName("confidence_score");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<string>("CropName")
                         .HasMaxLength(150)
-                        .HasColumnType("varchar(150)")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("crop_name");
 
                     b.Property<decimal>("EnvironmentalFactor")
@@ -48,7 +54,7 @@ namespace NovaTech.TerraTech.Platform.Migrations
 
                     b.Property<string>("FactorReason")
                         .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("factor_reason");
 
                     b.Property<int?>("FieldId")
@@ -64,7 +70,7 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .HasColumnName("projected_yield_kg");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -73,44 +79,80 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.HasIndex("FieldId")
                         .HasDatabaseName("i_x_reports_field_id");
 
-                    b.ToTable("reports");
+                    b.ToTable("reports", "terratech");
+                });
+
+            modelBuilder.Entity("NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Aggregates.FavoriteProduct", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer")
+                        .HasColumnName("product_id");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("p_k_favorite_products");
+
+                    b.HasIndex("ProductId")
+                        .HasDatabaseName("i_x_favorite_products_product_id");
+
+                    b.HasIndex("UserId", "ProductId")
+                        .IsUnique()
+                        .HasDatabaseName("i_x_favorite_products_user_id_product_id");
+
+                    b.ToTable("favorite_products", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Aggregates.Order", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<bool>("IsSubscription")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_subscription");
 
                     b.Property<int>("PaymentMethod")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("payment_method");
 
                     b.Property<int>("ProductId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("product_id");
 
                     b.Property<string>("ProductName")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("product_name");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("quantity");
 
                     b.Property<int>("Status")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("status");
 
                     b.Property<decimal>("TotalAmount")
@@ -118,11 +160,11 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .HasColumnName("total_amount");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
@@ -131,35 +173,67 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("i_x_orders_user_id");
 
-                    b.ToTable("orders");
+                    b.ToTable("orders", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Aggregates.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConsultationMonth")
+                        .HasColumnType("integer")
+                        .HasColumnName("consultation_month");
+
+                    b.Property<int>("ConsultationYear")
+                        .HasColumnType("integer")
+                        .HasColumnName("consultation_year");
+
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)")
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("description");
+
+                    b.Property<bool>("HighInterestAlertSent")
+                        .HasColumnType("boolean")
+                        .HasColumnName("high_interest_alert_sent");
 
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("image_url");
+
+                    b.Property<bool>("InactivityAlertSent")
+                        .HasColumnType("boolean")
+                        .HasColumnName("inactivity_alert_sent");
+
+                    b.Property<int>("InterestThreshold")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(100)
+                        .HasColumnName("interest_threshold");
+
+                    b.Property<DateTimeOffset?>("LastConsultationAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_consultation_at");
+
+                    b.Property<int>("MonthlyConsultations")
+                        .HasColumnType("integer")
+                        .HasColumnName("monthly_consultations");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("name");
 
                     b.Property<decimal>("Price")
@@ -169,54 +243,92 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("type");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
                         .HasName("p_k_products");
 
-                    b.ToTable("products");
+                    b.ToTable("products", "terratech");
+                });
+
+            modelBuilder.Entity("NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Aggregates.ProductPreference", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("category");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("p_k_product_preferences");
+
+                    b.HasIndex("Category")
+                        .HasDatabaseName("i_x_product_preferences_category");
+
+                    b.HasIndex("UserId", "Category")
+                        .IsUnique()
+                        .HasDatabaseName("i_x_product_preferences_user_id_category");
+
+                    b.ToTable("product_preferences", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.CommunityManagement.Domain.Model.Aggregates.Comment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)")
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("content");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<int>("ProductId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("product_id");
 
                     b.Property<int>("Rating")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("rating");
 
                     b.Property<int>("TargetProfileId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("target_profile_id");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
@@ -231,30 +343,32 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("i_x_comments_user_id");
 
-                    b.ToTable("comments", (string)null);
+                    b.ToTable("comments", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.CommunityManagement.Domain.Model.Aggregates.CommunityProfile", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<int>("ProfileId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("profile_id");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.Property<int>("VisibilityStatus")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("visibility_status");
 
                     b.HasKey("Id")
@@ -263,76 +377,78 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.HasIndex("ProfileId")
                         .HasDatabaseName("i_x_community_profiles_profile_id");
 
-                    b.ToTable("community_profiles", (string)null);
+                    b.ToTable("community_profiles", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.Iam.Domain.Model.Aggregates.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<bool>("EmailVerificationExempt")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("email_verification_exempt");
 
                     b.Property<DateTime?>("EmailVerifiedAtUtc")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("email_verified_at_utc");
 
                     b.Property<string>("FullName")
                         .HasMaxLength(150)
-                        .HasColumnType("varchar(150)")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("full_name");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("password_hash");
 
                     b.Property<int>("TokenVersion")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("token_version");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
                         .HasName("p_k_users");
 
-                    b.ToTable("users", (string)null);
+                    b.ToTable("users", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.Iam.Domain.Model.Entities.AccountEmailToken", b =>
                 {
                     b.Property<int>("UserId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("user_id");
 
                     b.Property<string>("Purpose")
                         .HasMaxLength(32)
-                        .HasColumnType("varchar(32)")
+                        .HasColumnType("character varying(32)")
                         .HasColumnName("purpose");
 
                     b.Property<DateTime>("ExpiresAtUtc")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at_utc");
 
                     b.Property<DateTime>("RequestedAtUtc")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("requested_at_utc");
 
                     b.Property<string>("TokenHash")
                         .IsConcurrencyToken()
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("varchar(64)")
+                        .HasColumnType("character varying(64)")
                         .HasColumnName("token_hash");
 
                     b.HasKey("UserId", "Purpose")
@@ -342,36 +458,38 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .IsUnique()
                         .HasDatabaseName("i_x_account_email_tokens_token_hash");
 
-                    b.ToTable("account_email_tokens", (string)null);
+                    b.ToTable("account_email_tokens", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.Device", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
                     b.Property<int?>("BatteryLevelPercent")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("battery_level_percent");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<string>("Name")
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
                     b.Property<string>("SensorCode")
                         .HasMaxLength(9)
-                        .HasColumnType("varchar(9)")
+                        .HasColumnType("character varying(9)")
                         .HasColumnName("sensor_code");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -381,80 +499,82 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .IsUnique()
                         .HasDatabaseName("i_x_devices_sensor_code");
 
-                    b.ToTable("devices");
+                    b.ToTable("devices", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.FertilityZone", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Boundary")
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("boundary");
 
                     b.Property<int>("DeviceId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("device_id");
 
                     b.Property<int>("FieldId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("field_id");
 
                     b.Property<double>("MoistureMax")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasDefaultValue(75.0)
                         .HasColumnName("moisture_max");
 
                     b.Property<double>("MoistureMin")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasDefaultValue(25.0)
                         .HasColumnName("moisture_min");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
                     b.Property<double>("NitrogenMax")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasDefaultValue(40.0)
                         .HasColumnName("nitrogen_max");
 
                     b.Property<double>("NitrogenMin")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasDefaultValue(20.0)
                         .HasColumnName("nitrogen_min");
 
                     b.Property<double>("PhosphorusMax")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasDefaultValue(30.0)
                         .HasColumnName("phosphorus_max");
 
                     b.Property<double>("PhosphorusMin")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasDefaultValue(15.0)
                         .HasColumnName("phosphorus_min");
 
                     b.Property<double>("PotassiumMax")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasDefaultValue(50.0)
                         .HasColumnName("potassium_max");
 
                     b.Property<double>("PotassiumMin")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasDefaultValue(30.0)
                         .HasColumnName("potassium_min");
 
@@ -467,54 +587,56 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.HasIndex("FieldId")
                         .HasDatabaseName("i_x_fertility_zones_field_id");
 
-                    b.ToTable("fertility_zones", (string)null);
+                    b.ToTable("fertility_zones", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.Field", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
                     b.Property<string>("Boundary")
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("boundary");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<string>("CropName")
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("crop_name");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
                         .HasName("p_k_fields");
 
-                    b.ToTable("fields");
+                    b.ToTable("fields", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.SensorCatalogItem", b =>
                 {
                     b.Property<string>("SensorCode")
                         .HasMaxLength(9)
-                        .HasColumnType("varchar(9)")
+                        .HasColumnType("character varying(9)")
                         .HasColumnName("sensor_code");
 
                     b.Property<bool>("IsDemo")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_demo");
 
                     b.Property<string>("MacAddress")
                         .IsRequired()
                         .HasMaxLength(17)
-                        .HasColumnType("varchar(17)")
+                        .HasColumnType("character varying(17)")
                         .HasColumnName("mac_address");
 
                     b.HasKey("SensorCode")
@@ -524,48 +646,50 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .IsUnique()
                         .HasDatabaseName("i_x_sensor_catalog_items_mac_address");
 
-                    b.ToTable("sensor_catalog_items");
+                    b.ToTable("sensor_catalog_items", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.SensorReading", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
                     b.Property<int>("DeviceId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("device_id");
 
                     b.Property<double>("MoisturePercent")
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasColumnName("moisture_percent");
 
                     b.Property<double>("NitrogenPpm")
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasColumnName("nitrogen_ppm");
 
                     b.Property<double>("PhosphorusPpm")
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasColumnName("phosphorus_ppm");
 
                     b.Property<double>("PotassiumPpm")
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasColumnName("potassium_ppm");
 
                     b.Property<DateTime>("RecordedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("recorded_at");
 
                     b.Property<double>("SoilTemperatureC")
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasColumnName("soil_temperature_c");
 
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("source");
 
                     b.HasKey("Id")
@@ -575,75 +699,77 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .IsUnique()
                         .HasDatabaseName("i_x_sensor_readings_device_id_recorded_at");
 
-                    b.ToTable("sensor_readings");
+                    b.ToTable("sensor_readings", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.WebhookRecommendation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Action")
                         .IsRequired()
                         .HasMaxLength(160)
-                        .HasColumnType("varchar(160)")
+                        .HasColumnType("character varying(160)")
                         .HasColumnName("action");
 
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasMaxLength(40)
-                        .HasColumnType("varchar(40)")
+                        .HasColumnType("character varying(40)")
                         .HasColumnName("category");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<int?>("DeviceId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("device_id");
 
                     b.Property<int>("DurationMinutes")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("duration_minutes");
 
                     b.Property<string>("ExternalId")
                         .HasMaxLength(120)
-                        .HasColumnType("varchar(120)")
+                        .HasColumnType("character varying(120)")
                         .HasColumnName("external_id");
 
                     b.Property<int?>("FertilityZoneId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("fertility_zone_id");
 
                     b.Property<int>("FieldId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("field_id");
 
                     b.Property<string>("Priority")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("priority");
 
                     b.Property<string>("Reason")
                         .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)")
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("reason");
 
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasMaxLength(80)
-                        .HasColumnType("varchar(80)")
+                        .HasColumnType("character varying(80)")
                         .HasColumnName("source");
 
                     b.Property<string>("Zone")
                         .IsRequired()
                         .HasMaxLength(120)
-                        .HasColumnType("varchar(120)")
+                        .HasColumnType("character varying(120)")
                         .HasColumnName("zone");
 
                     b.HasKey("Id")
@@ -658,32 +784,34 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.HasIndex("FieldId")
                         .HasDatabaseName("i_x_webhook_recommendations_field_id");
 
-                    b.ToTable("webhook_recommendations", (string)null);
+                    b.ToTable("webhook_recommendations", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.NotificationManagement.Domain.Model.Aggregates.Notification", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<bool>("IsAlert")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_alert");
 
                     b.Property<bool>("IsRead")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_read");
 
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)")
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("message");
 
                     b.Property<int>("ProfileId")
@@ -693,11 +821,11 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("title");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -706,35 +834,37 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.HasIndex("ProfileId")
                         .HasDatabaseName("i_x_notifications_profile_id");
 
-                    b.ToTable("notifications");
+                    b.ToTable("notifications", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.Aggregates.Profile", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<string>("Location")
                         .HasMaxLength(250)
-                        .HasColumnType("varchar(250)")
+                        .HasColumnType("character varying(250)")
                         .HasColumnName("location");
 
                     b.Property<double?>("SizeM2")
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasColumnName("size_m2");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
@@ -744,22 +874,24 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .IsUnique()
                         .HasDatabaseName("i_x_profiles_user_id");
 
-                    b.ToTable("profiles");
+                    b.ToTable("profiles", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.StockManagement.Domain.Model.Aggregates.Inventory", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("AverageWeightPerUnitKg")
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("average_weight_per_unit_kg");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<int>("FieldId")
@@ -769,11 +901,11 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("name");
 
                     b.Property<int?>("OwnerUserId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("owner_user_id");
 
                     b.Property<decimal>("Price")
@@ -790,7 +922,7 @@ namespace NovaTech.TerraTech.Platform.Migrations
 
                     b.Property<int>("StockQuantity")
                         .IsConcurrencyToken()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("stock_quantity");
 
                     b.Property<decimal>("TotalWeightKg")
@@ -800,11 +932,11 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.Property<string>("UnitType")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("unit_type");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -813,7 +945,7 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.HasIndex("OwnerUserId")
                         .HasDatabaseName("i_x_inventories_owner_user_id");
 
-                    b.ToTable("inventories");
+                    b.ToTable("inventories", "terratech");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Model.Aggregates.Report", b =>
@@ -827,17 +959,17 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Model.ValueObjects.DeviceId", "DeviceId", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<int>("Value")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("device_id");
 
                             b1.HasKey("Id")
                                 .HasName("p_k_reports");
 
-                            b1.ToTable("reports");
+                            b1.ToTable("reports", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -847,17 +979,17 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Model.ValueObjects.GeneratedAt", "GeneratedAt", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<DateTimeOffset>("Value")
-                                .HasColumnType("datetime")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("generated_at");
 
                             b1.HasKey("Id")
                                 .HasName("p_k_reports");
 
-                            b1.ToTable("reports");
+                            b1.ToTable("reports", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -867,17 +999,17 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Model.ValueObjects.MeanValue", "MeanValue", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<double>("Value")
-                                .HasColumnType("double")
+                                .HasColumnType("double precision")
                                 .HasColumnName("mean_value");
 
                             b1.HasKey("Id")
                                 .HasName("p_k_reports");
 
-                            b1.ToTable("reports");
+                            b1.ToTable("reports", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -887,17 +1019,17 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Model.ValueObjects.StandardDeviation", "StandardDeviation", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<double>("Value")
-                                .HasColumnType("double")
+                                .HasColumnType("double precision")
                                 .HasColumnName("standard_deviation");
 
                             b1.HasKey("Id")
                                 .HasName("p_k_reports");
 
-                            b1.ToTable("reports");
+                            b1.ToTable("reports", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -907,19 +1039,19 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Model.ValueObjects.TechnicalInterpretation", "TechnicalInterpretation", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Value")
                                 .IsRequired()
                                 .HasMaxLength(500)
-                                .HasColumnType("varchar(500)")
+                                .HasColumnType("character varying(500)")
                                 .HasColumnName("technical_interpretation");
 
                             b1.HasKey("Id")
                                 .HasName("p_k_reports");
 
-                            b1.ToTable("reports");
+                            b1.ToTable("reports", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -929,17 +1061,17 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.AnalyticsManagement.Domain.Model.ValueObjects.Variance", "Variance", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<double>("Value")
-                                .HasColumnType("double")
+                                .HasColumnType("double precision")
                                 .HasColumnName("variance");
 
                             b1.HasKey("Id")
                                 .HasName("p_k_reports");
 
-                            b1.ToTable("reports");
+                            b1.ToTable("reports", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -965,6 +1097,23 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Aggregates.FavoriteProduct", b =>
+                {
+                    b.HasOne("NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Aggregates.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("f_k_favorite_products__product_product_id");
+
+                    b.HasOne("NovaTech.TerraTech.Platform.Iam.Domain.Model.Aggregates.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("f_k_favorite_products_users_user_id");
+                });
+
             modelBuilder.Entity("NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Aggregates.Order", b =>
                 {
                     b.HasOne("NovaTech.TerraTech.Platform.Iam.Domain.Model.Aggregates.User", null)
@@ -973,6 +1122,16 @@ namespace NovaTech.TerraTech.Platform.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("f_k_orders_users_user_id");
+                });
+
+            modelBuilder.Entity("NovaTech.TerraTech.Platform.CommercialManagement.Domain.Model.Aggregates.ProductPreference", b =>
+                {
+                    b.HasOne("NovaTech.TerraTech.Platform.Iam.Domain.Model.Aggregates.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("f_k_product_preferences_users_user_id");
                 });
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.CommunityManagement.Domain.Model.Aggregates.Comment", b =>
@@ -1011,19 +1170,19 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.CommunityManagement.Domain.Model.ValueObjects.CommunityNickname", "Nickname", b1 =>
                         {
                             b1.Property<int>("CommunityProfileId")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Nickname")
                                 .IsRequired()
                                 .HasMaxLength(100)
-                                .HasColumnType("varchar(100)")
+                                .HasColumnType("character varying(100)")
                                 .HasColumnName("nickname");
 
                             b1.HasKey("CommunityProfileId")
                                 .HasName("p_k_community_profiles");
 
-                            b1.ToTable("community_profiles");
+                            b1.ToTable("community_profiles", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("CommunityProfileId")
@@ -1033,19 +1192,19 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.CommunityManagement.Domain.Model.ValueObjects.PublicBio", "PublicBio", b1 =>
                         {
                             b1.Property<int>("CommunityProfileId")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Bio")
                                 .IsRequired()
                                 .HasMaxLength(500)
-                                .HasColumnType("varchar(500)")
+                                .HasColumnType("character varying(500)")
                                 .HasColumnName("public_bio");
 
                             b1.HasKey("CommunityProfileId")
                                 .HasName("p_k_community_profiles");
 
-                            b1.ToTable("community_profiles");
+                            b1.ToTable("community_profiles", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("CommunityProfileId")
@@ -1055,17 +1214,17 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.CommunityManagement.Domain.Model.ValueObjects.Reputation", "ReputationScore", b1 =>
                         {
                             b1.Property<int>("CommunityProfileId")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<int>("Score")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("reputation_score");
 
                             b1.HasKey("CommunityProfileId")
                                 .HasName("p_k_community_profiles");
 
-                            b1.ToTable("community_profiles");
+                            b1.ToTable("community_profiles", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("CommunityProfileId")
@@ -1087,13 +1246,13 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.Iam.Domain.Model.ValueObjects.Email", "EmailAddress", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Value")
                                 .IsRequired()
                                 .HasMaxLength(255)
-                                .HasColumnType("varchar(255)")
+                                .HasColumnType("character varying(255)")
                                 .HasColumnName("email_address");
 
                             b1.HasKey("Id")
@@ -1103,7 +1262,7 @@ namespace NovaTech.TerraTech.Platform.Migrations
                                 .IsUnique()
                                 .HasDatabaseName("i_x_users_email_address");
 
-                            b1.ToTable("users");
+                            b1.ToTable("users", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -1126,28 +1285,22 @@ namespace NovaTech.TerraTech.Platform.Migrations
 
             modelBuilder.Entity("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.Device", b =>
                 {
-                    b.HasOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.SensorCatalogItem", null)
-                        .WithMany()
-                        .HasForeignKey("SensorCode")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("f_k_devices__sensor_catalog_item_sensor_code");
-
                     b.OwnsOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects.DeviceStatus", "Status", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Value")
                                 .IsRequired()
                                 .HasMaxLength(20)
-                                .HasColumnType("varchar(20)")
+                                .HasColumnType("character varying(20)")
                                 .HasColumnName("status");
 
                             b1.HasKey("Id")
                                 .HasName("p_k_devices");
 
-                            b1.ToTable("devices");
+                            b1.ToTable("devices", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -1157,11 +1310,11 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects.FieldId", "FieldId", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<int>("Value")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("field_id");
 
                             b1.HasKey("Id")
@@ -1170,7 +1323,7 @@ namespace NovaTech.TerraTech.Platform.Migrations
                             b1.HasIndex("Value")
                                 .HasDatabaseName("i_x_devices_field_id");
 
-                            b1.ToTable("devices");
+                            b1.ToTable("devices", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -1187,17 +1340,17 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects.LastSync", "LastSync", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<DateTimeOffset>("Value")
-                                .HasColumnType("datetime")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("last_sync");
 
                             b1.HasKey("Id")
                                 .HasName("p_k_devices");
 
-                            b1.ToTable("devices");
+                            b1.ToTable("devices", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -1207,13 +1360,13 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects.MacAddress", "MacAddress", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Value")
                                 .IsRequired()
                                 .HasMaxLength(17)
-                                .HasColumnType("varchar(17)")
+                                .HasColumnType("character varying(17)")
                                 .HasColumnName("mac_address");
 
                             b1.HasKey("Id")
@@ -1223,7 +1376,7 @@ namespace NovaTech.TerraTech.Platform.Migrations
                                 .IsUnique()
                                 .HasDatabaseName("i_x_devices_mac_address");
 
-                            b1.ToTable("devices");
+                            b1.ToTable("devices", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -1248,14 +1401,14 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.HasOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.Device", null)
                         .WithMany()
                         .HasForeignKey("DeviceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("f_k_fertility_zones_devices_device_id");
 
                     b.HasOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.Aggregates.Field", null)
                         .WithMany()
                         .HasForeignKey("FieldId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("f_k_fertility_zones__field_field_id");
                 });
@@ -1265,19 +1418,19 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects.FieldName", "Name", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Value")
                                 .IsRequired()
                                 .HasMaxLength(100)
-                                .HasColumnType("varchar(100)")
+                                .HasColumnType("character varying(100)")
                                 .HasColumnName("name");
 
                             b1.HasKey("Id")
                                 .HasName("p_k_fields");
 
-                            b1.ToTable("fields");
+                            b1.ToTable("fields", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -1287,21 +1440,21 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects.LocationLatLong", "LocationLatLong", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<double>("Latitude")
-                                .HasColumnType("double")
+                                .HasColumnType("double precision")
                                 .HasColumnName("latitude");
 
                             b1.Property<double>("Longitude")
-                                .HasColumnType("double")
+                                .HasColumnType("double precision")
                                 .HasColumnName("longitude");
 
                             b1.HasKey("Id")
                                 .HasName("p_k_fields");
 
-                            b1.ToTable("fields");
+                            b1.ToTable("fields", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -1311,11 +1464,11 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects.ProfileId", "ProfileId", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<int>("Value")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("profile_id");
 
                             b1.HasKey("Id")
@@ -1324,7 +1477,7 @@ namespace NovaTech.TerraTech.Platform.Migrations
                             b1.HasIndex("Value")
                                 .HasDatabaseName("i_x_fields_profile_id");
 
-                            b1.ToTable("fields");
+                            b1.ToTable("fields", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -1341,17 +1494,17 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects.SizeM2", "SizeM2", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<double>("Value")
-                                .HasColumnType("double")
+                                .HasColumnType("double precision")
                                 .HasColumnName("size_m2");
 
                             b1.HasKey("Id")
                                 .HasName("p_k_fields");
 
-                            b1.ToTable("fields");
+                            b1.ToTable("fields", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -1361,19 +1514,19 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.Monitoring.Domain.Model.ValueObjects.SoilType", "SoilType", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Value")
                                 .IsRequired()
                                 .HasMaxLength(50)
-                                .HasColumnType("varchar(50)")
+                                .HasColumnType("character varying(50)")
                                 .HasColumnName("soil_type");
 
                             b1.HasKey("Id")
                                 .HasName("p_k_fields");
 
-                            b1.ToTable("fields");
+                            b1.ToTable("fields", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -1444,18 +1597,18 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.ValueObjects.ContactPhone", "Phone", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Number")
                                 .IsRequired()
-                                .HasColumnType("longtext")
+                                .HasColumnType("text")
                                 .HasColumnName("contact_phone");
 
                             b1.HasKey("Id")
                                 .HasName("p_k_profiles");
 
-                            b1.ToTable("profiles");
+                            b1.ToTable("profiles", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -1465,18 +1618,18 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.ValueObjects.FundoName", "Name", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Name")
                                 .IsRequired()
-                                .HasColumnType("longtext")
+                                .HasColumnType("text")
                                 .HasColumnName("fundo_name");
 
                             b1.HasKey("Id")
                                 .HasName("p_k_profiles");
 
-                            b1.ToTable("profiles");
+                            b1.ToTable("profiles", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
@@ -1486,21 +1639,21 @@ namespace NovaTech.TerraTech.Platform.Migrations
                     b.OwnsOne("NovaTech.TerraTech.Platform.ProfileManagement.Domain.Model.ValueObjects.ProfileThresholds", "Thresholds", b1 =>
                         {
                             b1.Property<int>("Id")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("id");
 
                             b1.Property<double>("Moisture")
-                                .HasColumnType("double")
+                                .HasColumnType("double precision")
                                 .HasColumnName("moisture_threshold");
 
                             b1.Property<double>("Temperature")
-                                .HasColumnType("double")
+                                .HasColumnType("double precision")
                                 .HasColumnName("temp_threshold");
 
                             b1.HasKey("Id")
                                 .HasName("p_k_profiles");
 
-                            b1.ToTable("profiles");
+                            b1.ToTable("profiles", "terratech");
 
                             b1.WithOwner()
                                 .HasForeignKey("Id")
